@@ -57,6 +57,15 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define ACU_STATE_TASK_ENABLED 1
+#define CHARGE_STATE_TASK_ENABLED 0
+#define VCU_HRTBEAT_TASK_ENABLED 1
+#define LVBM_CHARGE_TASK_ENABLED 0
+#define CAN_TX_TASK_ENABLED 1
+#define CAN_RX_TASK_ENABLED 1
+#define COOLING_TASK_ENABLED 0
+#define WATCH_DOG_TASK_ENABLED 1
+#define IWDG_RELOAD_PERIOD 4094
 #define COOL_SYS_TEMP3_Pin GPIO_PIN_0
 #define COOL_SYS_TEMP3_GPIO_Port GPIOC
 #define VBATT_Pin GPIO_PIN_2
