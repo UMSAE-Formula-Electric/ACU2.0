@@ -21,11 +21,10 @@
 #include "can.h"
 
 /* USER CODE BEGIN 0 */
-CAN_RxHeaderTypeDef   RxHeader;
-uint8_t               RxData[8];
+#include "vcu_comms_handler.h"
+#include "logger.h"
+#include "iwdg.h"
 
-CAN_TxHeaderTypeDef TxHeader;
-uint8_t TxData[8];
 uint32_t TxMailbox;
 
 /* USER CODE END 0 */
@@ -106,6 +105,11 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
     GPIO_InitStruct.Alternate = GPIO_AF9_CAN1;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
+    /* CAN1 interrupt Init */
+    HAL_NVIC_SetPriority(CAN1_TX_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(CAN1_TX_IRQn);
+    HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
   /* USER CODE BEGIN CAN1_MspInit 1 */
 
   /* USER CODE END CAN1_MspInit 1 */
@@ -129,6 +133,9 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
     */
     HAL_GPIO_DeInit(GPIOD, GPIO_PIN_0|GPIO_PIN_1);
 
+    /* CAN1 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(CAN1_TX_IRQn);
+    HAL_NVIC_DisableIRQ(CAN1_RX0_IRQn);
   /* USER CODE BEGIN CAN1_MspDeInit 1 */
 
   /* USER CODE END CAN1_MspDeInit 1 */
@@ -136,5 +143,91 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 }
 
 /* USER CODE BEGIN 1 */
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+    CAN_RxPacketTypeDef rxPacket;
 
+    if (!(HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &(rxPacket.rxPacketHeader), rxPacket.rxPacketData) == HAL_OK &&
+          osMessageQueuePut(canRxPacketQueueHandle, &rxPacket, 0, 0) == osOK)) {
+        uint32_t currQueueSize = osMessageQueueGetCount(canRxPacketQueueHandle);
+        uint32_t maxQueueCapacity = osMessageQueueGetCapacity(canRxPacketQueueHandle);
+
+        if (currQueueSize == maxQueueCapacity) {  /* Queue is full */
+            logMessage("Error adding received message to the CAN Rx queue because the queue is full.\r\n", true);
+        }
+        else {  /* Error receiving message from CAN */
+            logMessage("Error receiving message from the CAN Bus and adding it to the Rx queue.\r\n", true);
+        }
+        Error_Handler();
+    }
+}
+
+void StartCanRxTask(void *argument)
+{
+    uint8_t isTaskActivated = (int)argument;
+    if (isTaskActivated == 0) {
+        osThreadTerminate(osThreadGetId());
+    }
+
+    if (!(HAL_CAN_Start(&hcan1) == HAL_OK && HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) == HAL_OK))
+    {
+        Error_Handler();
+    }
+
+    CAN_RxPacketTypeDef rxPacket;
+    osStatus_t isMsgTakenFromQueue;
+
+    for (;;)
+    {
+        kickWatchdogBit(osThreadGetId());
+
+        isMsgTakenFromQueue = osMessageQueueGet(canRxPacketQueueHandle, &rxPacket, 0, 0);
+        if (isMsgTakenFromQueue == osOK)
+        {
+            if (rxPacket.rxPacketHeader.IDE == CAN_ID_EXT)
+            {
+                switch (rxPacket.rxPacketHeader.ExtId)
+                {}
+            }
+            if (rxPacket.rxPacketHeader.IDE == CAN_ID_STD)
+            {
+                switch (rxPacket.rxPacketHeader.StdId)
+                {
+                    case CAN_VCU_CAN_ID:
+                        processAcuCanIdRxData(rxPacket.rxPacketData);
+                        break;
+                    case CAN_VCU_SET_ACB_STATE_ID:
+                        processVcuSetAcuStateCanIdRxData(rxPacket.rxPacketData);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+}
+
+void StartCanTxTask(void *argument){
+    uint8_t isTaskActivated = (int)argument;
+    if (isTaskActivated == 0) {
+        osThreadTerminate(osThreadGetId());
+    }
+
+    CAN_TxPacketTypeDef txPacket;
+    osStatus_t isMsgTakenFromQueue;
+
+    for(;;){
+        kickWatchdogBit(osThreadGetId());
+
+        isMsgTakenFromQueue = osMessageQueueGet(canTxPacketQueueHandle, &txPacket, 0, 0);
+        if (isMsgTakenFromQueue == osOK) {
+            if (HAL_CAN_AddTxMessage(&hcan1, &txPacket.txPacketHeader, txPacket.txPacketData, &TxMailbox) != HAL_OK) {
+                logMessage("VCU couldn't send a message to the CAN Bus.\r\n", true);
+            }
+            else {
+                logMessage("VCU sent a message to the CAN Bus.\r\n", true);
+            }
+        }
+    }
+}
 /* USER CODE END 1 */
