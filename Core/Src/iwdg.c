@@ -86,9 +86,7 @@ TaskInfo* getTaskInfos(size_t* count) {
     static TaskInfo taskInfos[] = {
             {&defaultTask_attributes, DEFAULT_TASK_ENABLED},
             {&acuStateTask_attributes, ACU_STATE_TASK_ENABLED},
-            {&chargeStateTask_attributes, CHARGE_STATE_TASK_ENABLED},
             {&vcuHrtBeatTask_attributes, VCU_HRTBEAT_TASK_ENABLED},
-            {&lvbmChargeTask_attributes, LVBM_CHARGE_TASK_ENABLED},
             {&canTxTask_attributes, CAN_TX_TASK_ENABLED},
             {&canRxTask_attributes, CAN_RX_TASK_ENABLED},
             {&coolingTask_attributes, COOLING_TASK_ENABLED},

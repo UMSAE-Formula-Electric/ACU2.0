@@ -12,9 +12,7 @@
 
 extern osThreadId_t defaultTaskHandle;
 extern osThreadId_t acuStateTaskHandle;
-extern osThreadId_t chargeStateTaskHandle;
 extern osThreadId_t vcuHrtBeatTaskHandle;
-extern osThreadId_t lvbmChargeTaskHandle;
 extern osThreadId_t canTxTaskHandle;
 extern osThreadId_t canRxTaskHandle;
 extern osThreadId_t coolingTaskHandle;
@@ -22,9 +20,7 @@ extern osThreadId_t watchDogTaskHandle;
 
 extern const osThreadAttr_t defaultTask_attributes;
 extern const osThreadAttr_t acuStateTask_attributes;
-extern const osThreadAttr_t chargeStateTask_attributes;
 extern const osThreadAttr_t vcuHrtBeatTask_attributes;
-extern const osThreadAttr_t lvbmChargeTask_attributes;
 extern const osThreadAttr_t canTxTask_attributes;
 extern const osThreadAttr_t canRxTask_attributes;
 extern const osThreadAttr_t coolingTask_attributes;

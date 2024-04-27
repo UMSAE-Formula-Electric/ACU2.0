@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "can_utils.h"
+#include "iwdg.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,26 +62,12 @@ const osThreadAttr_t acuStateTask_attributes = {
   .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityHigh,
 };
-/* Definitions for chargeStateTask */
-osThreadId_t chargeStateTaskHandle;
-const osThreadAttr_t chargeStateTask_attributes = {
-  .name = "chargeStateTask",
-  .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
-};
 /* Definitions for vcuHrtBeatTask */
 osThreadId_t vcuHrtBeatTaskHandle;
 const osThreadAttr_t vcuHrtBeatTask_attributes = {
   .name = "vcuHrtBeatTask",
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
-};
-/* Definitions for lvbmChargeTask */
-osThreadId_t lvbmChargeTaskHandle;
-const osThreadAttr_t lvbmChargeTask_attributes = {
-  .name = "lvbmChargeTask",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for canTxTask */
 osThreadId_t canTxTaskHandle;
@@ -133,9 +120,7 @@ const osEventFlagsAttr_t iwdgEventGroup_attributes = {
 
 void StartDefaultTask(void *argument);
 extern void StartAcuStateTask(void *argument);
-extern void StartChargeStateTask(void *argument);
 extern void StartVcuHrtBeatTask(void *argument);
-extern void StartLvbmChargeTask(void *argument);
 extern void StartCanTxTask(void *argument);
 extern void StartCanRxTask(void *argument);
 extern void StartCoolingTask(void *argument);
@@ -183,14 +168,8 @@ void MX_FREERTOS_Init(void) {
   /* creation of acuStateTask */
   acuStateTaskHandle = osThreadNew(StartAcuStateTask, (void*) ACU_STATE_TASK_ENABLED, &acuStateTask_attributes);
 
-  /* creation of chargeStateTask */
-  chargeStateTaskHandle = osThreadNew(StartChargeStateTask, (void*) CHARGE_STATE_TASK_ENABLED, &chargeStateTask_attributes);
-
   /* creation of vcuHrtBeatTask */
   vcuHrtBeatTaskHandle = osThreadNew(StartVcuHrtBeatTask, (void*) VCU_HRTBEAT_TASK_ENABLED, &vcuHrtBeatTask_attributes);
-
-  /* creation of lvbmChargeTask */
-  lvbmChargeTaskHandle = osThreadNew(StartLvbmChargeTask, (void*) LVBM_CHARGE_TASK_ENABLED, &lvbmChargeTask_attributes);
 
   /* creation of canTxTask */
   canTxTaskHandle = osThreadNew(StartCanTxTask, (void*) CAN_TX_TASK_ENABLED, &canTxTask_attributes);
@@ -236,6 +215,7 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+      kickWatchdogBit(osThreadGetId());
     osDelay(1);
   }
   /* USER CODE END StartDefaultTask */
