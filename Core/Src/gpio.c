@@ -58,7 +58,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOE, MC_PWR_CTRL_Pin|PUMP_CTRL_Pin|FANS_CTRL_Pin|ACU_LED2_RED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, AMS_CLR_ERR_Pin|AIR__CTRL_Pin|AIR__CTRLD10_Pin|PRECHRG_CTRL_Pin
+  HAL_GPIO_WritePin(GPIOD, AMS_CLR_ERR_Pin|AIR_NEG_CTRL_Pin|AIR_POS_CTRL_Pin|PRECHRG_CTRL_Pin
                           |ACU_LED1_BLUE_Pin|ACU_LED1_GREEN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
@@ -143,7 +143,7 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin
                            PBPin */
-  GPIO_InitStruct.Pin = IMD_OK_Pin|AMS_OK_Pin|AIR__FB_Pin|AIR__FBB15_Pin
+  GPIO_InitStruct.Pin = IMD_OK_Pin|AMS_OK_Pin|AIR_NEG_FB_Pin|AIR_POS_FB_Pin
                           |IMD_RESIST_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -151,7 +151,7 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PDPin PDPin PDPin PDPin
                            PDPin PDPin */
-  GPIO_InitStruct.Pin = AMS_CLR_ERR_Pin|AIR__CTRL_Pin|AIR__CTRLD10_Pin|PRECHRG_CTRL_Pin
+  GPIO_InitStruct.Pin = AMS_CLR_ERR_Pin|AIR_NEG_CTRL_Pin|AIR_POS_CTRL_Pin|PRECHRG_CTRL_Pin
                           |ACU_LED1_BLUE_Pin|ACU_LED1_GREEN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;

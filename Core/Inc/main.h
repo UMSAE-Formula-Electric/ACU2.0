@@ -57,17 +57,15 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define ACU_STATE_TASK_ENABLED 1
-#define CHARGE_STATE_TASK_ENABLED 0
-#define VCU_HRTBEAT_TASK_ENABLED 1
-#define LVBM_CHARGE_TASK_ENABLED 0
 #define CAN_TX_TASK_ENABLED 1
-#define CAN_RX_TASK_ENABLED 1
-#define COOLING_TASK_ENABLED 0
-#define WATCH_DOG_TASK_ENABLED 1
 #define IWDG_RELOAD_PERIOD 4094
-#define DEFAULT_TASK_ENABLED 0
+#define COOLING_TASK_ENABLED 0
+#define VCU_HRTBEAT_TASK_ENABLED 1
 #define IWDG_EVENT_ALL_ALLOWED_BITS 0xFFFFFF
+#define ACU_STATE_TASK_ENABLED 1
+#define CAN_RX_TASK_ENABLED 1
+#define DEFAULT_TASK_ENABLED 0
+#define WATCH_DOG_TASK_ENABLED 1
 #define COOL_SYS_TEMP3_Pin GPIO_PIN_0
 #define COOL_SYS_TEMP3_GPIO_Port GPIOC
 #define VBATT_Pin GPIO_PIN_2
@@ -102,16 +100,16 @@ void Error_Handler(void);
 #define IMD_OK_GPIO_Port GPIOB
 #define AMS_OK_Pin GPIO_PIN_13
 #define AMS_OK_GPIO_Port GPIOB
-#define AIR__FB_Pin GPIO_PIN_14
-#define AIR__FB_GPIO_Port GPIOB
-#define AIR__FBB15_Pin GPIO_PIN_15
-#define AIR__FBB15_GPIO_Port GPIOB
+#define AIR_NEG_FB_Pin GPIO_PIN_14
+#define AIR_NEG_FB_GPIO_Port GPIOB
+#define AIR_POS_FB_Pin GPIO_PIN_15
+#define AIR_POS_FB_GPIO_Port GPIOB
 #define AMS_CLR_ERR_Pin GPIO_PIN_8
 #define AMS_CLR_ERR_GPIO_Port GPIOD
-#define AIR__CTRL_Pin GPIO_PIN_9
-#define AIR__CTRL_GPIO_Port GPIOD
-#define AIR__CTRLD10_Pin GPIO_PIN_10
-#define AIR__CTRLD10_GPIO_Port GPIOD
+#define AIR_NEG_CTRL_Pin GPIO_PIN_9
+#define AIR_NEG_CTRL_GPIO_Port GPIOD
+#define AIR_POS_CTRL_Pin GPIO_PIN_10
+#define AIR_POS_CTRL_GPIO_Port GPIOD
 #define SHCT_TAP_Pin GPIO_PIN_12
 #define SHCT_TAP_GPIO_Port GPIOD
 #define PRECHRG_CTRL_Pin GPIO_PIN_13
