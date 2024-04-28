@@ -84,13 +84,13 @@ bool startFromIWDG() {
  */
 TaskInfo* getTaskInfos(size_t* count) {
     static TaskInfo taskInfos[] = {
-            {&defaultTask_attributes, DEFAULT_TASK_ENABLED},
-            {&acuStateTask_attributes, ACU_STATE_TASK_ENABLED},
-            {&vcuHrtBeatTask_attributes, VCU_HRTBEAT_TASK_ENABLED},
-            {&canTxTask_attributes, CAN_TX_TASK_ENABLED},
-            {&canRxTask_attributes, CAN_RX_TASK_ENABLED},
-            {&coolingTask_attributes, COOLING_TASK_ENABLED},
-            {&watchDogTask_attributes, WATCH_DOG_TASK_ENABLED}
+            {&defaultTaskHandle, DEFAULT_TASK_ENABLED},
+            {&acuStateTaskHandle, ACU_STATE_TASK_ENABLED},
+            {&vcuHrtBeatTaskHandle, VCU_HRTBEAT_TASK_ENABLED},
+            {&canTxTaskHandle, CAN_TX_TASK_ENABLED},
+            {&canRxTaskHandle, CAN_RX_TASK_ENABLED},
+            {&coolingTaskHandle, COOLING_TASK_ENABLED},
+            {&watchDogTaskHandle, WATCH_DOG_TASK_ENABLED}
     };
 
     *count = sizeof(taskInfos) / sizeof(TaskInfo);
@@ -103,11 +103,11 @@ TaskInfo* getTaskInfos(size_t* count) {
  * @param taskHandle The handle of the task
  * @return TaskBit_t The bit position of the task
  */
-TaskBit_t getTaskBit(const void *taskHandle) {
+TaskBit_t getTaskBit(osThreadId_t taskHandle) {
     size_t taskCount;
     TaskInfo* taskInfos = getTaskInfos(&taskCount);
     for (TaskBit_t taskBit = 0; taskBit < taskCount; taskBit++) {
-        if (taskHandle == xTaskGetHandle(taskInfos[taskBit].task_attributes->name)) {
+        if (taskHandle == *taskInfos[taskBit].taskHandle) {
             return taskBit;
         }
     }
@@ -167,7 +167,7 @@ bool areAllActiveTasksReady() {
     EventBits_t taskBits = xEventGroupGetBits(iwdgEventGroupHandle);
 
     for (int taskBit = 0; taskBit < taskCount; taskBit++) {
-        currTask = xTaskGetHandle(taskInfos[taskBit].task_attributes->name);
+        currTask = *taskInfos[taskBit].taskHandle;
         currTaskBit = getTaskBit(currTask);
         if (isTaskActive(currTaskBit, taskInfos, taskCount) && !isTaskReady(currTaskBit, taskBits)) {
             return false;
