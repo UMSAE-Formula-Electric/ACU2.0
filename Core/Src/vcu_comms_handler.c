@@ -11,7 +11,7 @@ extern QueueHandle_t ACB_VCU_CAN_Queue;
 
 void notify_heartbeat_task(heatbeat_notif_vals_t notify_val);
 
-void processAcuCanIdRxData(const uint8_t *RxData) {
+void processVcuToAcuCanIdRxData(const uint8_t *RxData) {
     switch(RxData[0]){
         case CAN_HEARTBEAT_REQUEST:
             notify_heartbeat_task(HEARTBEAT_REQUEST_NOTIFY);
@@ -72,7 +72,7 @@ void process_VCU_CAN_packets(void *argument){
                 processVcuSetAcuStateCanIdRxData(RxData);
             }
             else if(packetToProcess.StdId == CAN_ACU_CAN_ID){
-                processAcuCanIdRxData(RxData);
+                processVcuToAcuCanIdRxData(RxData);
             }
 		}
 	}
@@ -82,7 +82,7 @@ void process_VCU_CAN_packets(void *argument){
 
 void send_VCU_mesg(enum ACB_TO_CAN_MSG msg){
 	uint8_t data = (uint8_t)msg;
-	sendCan(&hcan1, &data, 1, CAN_VCU_CAN_ID, CAN_NO_EXT, CAN_NO_EXT);
+	sendCan(&hcan1, &data, 1, CAN_ACU_TO_VCU_ID, CAN_RTR_DATA, CAN_NO_EXT);
 }
 
 void notify_heartbeat_task(heatbeat_notif_vals_t notify_val){

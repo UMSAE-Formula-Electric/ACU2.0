@@ -4,7 +4,7 @@
 #include "can.h"
 
 void processVcuSetAcuStateCanIdRxData(const uint8_t *RxData);
-void processAcuCanIdRxData(const uint8_t *RxData);
+void processVcuToAcuCanIdRxData(const uint8_t *RxData);
 uint8_t vcu_comms_init();
 void send_TSA_ack();
 void send_TSA_nack();
