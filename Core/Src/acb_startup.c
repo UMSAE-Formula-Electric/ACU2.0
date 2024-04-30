@@ -59,8 +59,6 @@ void StartAcuStateTask(void *argument){
 	uint32_t ulNotifiedValue;
 	loop_status_t saftey_loop = SAFETY_LOOP_CLOSED;
 
-	//wait a bit and then request data from MC
-	vTaskDelay(pdMS_TO_TICKS(500));
 	//mc_data_request_init();
 
 #ifdef TEST_BUZZER

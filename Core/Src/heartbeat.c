@@ -3,6 +3,7 @@
 #include "vcu_comms_handler.h"
 #include "logger.h"
 #include "freertos_task_handles.h"
+#include "iwdg.h"
 
 #define HEARTBEAT_TASK_DELAY_MS     50
 #define HEARTBEAT_MAX_MISSES		20 //Max number of times we can miss a heartbeat notification
@@ -27,6 +28,8 @@ void StartVcuHrtBeatTask(void *argument){
 	uint8_t misses = 0; //indicates how many cycles we have gone without detecting ACB
 
 	for(;;){
+        kickWatchdogBit(osThreadGetId());
+
 		//send heartbeat message to ACB
 		send_VCU_mesg(CAN_HEARTBEAT_RESPONSE);
 
