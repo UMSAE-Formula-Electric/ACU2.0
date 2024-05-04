@@ -1,14 +1,13 @@
-#include "stm32f4xx.h"
 #include "heartbeat.h"
 #include "vcu_comms_handler.h"
 #include "logger.h"
 #include "freertos_task_handles.h"
 #include "iwdg.h"
 
-#define HEARTBEAT_TASK_DELAY_MS     50
-#define HEARTBEAT_MAX_MISSES		20 //Max number of times we can miss a heartbeat notification
+#define HEARTBEAT_TASK_DELAY_MS     100
+#define HEARTBEAT_MAX_MISSES		50 //Max number of times we can miss a heartbeat notification
 
-heatbeat_state_t vcu_connection_state;
+static HeartbeatState_t vcu_connection_state = HEARTBEAT_NONE;
 
 /*
  * heartbeat_master_task
@@ -23,8 +22,7 @@ void StartVcuHrtBeatTask(void *argument){
     }
 
 	BaseType_t retRTOS;
-	uint32_t ulNotifiedValue = 0;
-	vcu_connection_state = HEARTBEAT_HAS_VCU;
+    HeartbeatNotify_t vcuNotification = 0;
 	uint8_t misses = 0; //indicates how many cycles we have gone without detecting ACB
 
 	for(;;){
@@ -34,63 +32,25 @@ void StartVcuHrtBeatTask(void *argument){
 		send_VCU_mesg(CAN_HEARTBEAT_RESPONSE);
 
 		//Check if ACB has sent a message
-		retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
+		retRTOS = xTaskNotifyWait(0x00, 0x00, (uint32_t*) &vcuNotification, pdMS_TO_TICKS(HEARTBEAT_TASK_DELAY_MS));
 
 		//check if the ACB responded
-		if(retRTOS == pdTRUE && ulNotifiedValue == HEARTBEAT_REQUEST_NOTIFY){
-			//received notification from ACB
-
-			//reset misses counter
-			misses = 0;
-
-			//check if we have previously lost the ACB
-			if(vcu_connection_state == HEARTBEAT_LOST_VCU){
-			  logMessage("Heartbeat: VCU re-connection", true);
-			}
-			else if(vcu_connection_state == HEARTBEAT_NO_VCU){
-				//connecting with acb for first time
-			  logMessage("Heartbeat: Made connection with VCU", true);
-			}
-
-			//set state
-			vcu_connection_state = HEARTBEAT_HAS_VCU;
+		if(retRTOS == pdTRUE && vcuNotification == HEARTBEAT_REQUEST_NOTIFY){
+            // Received notification from ACU
+            misses = 0; // Reset misses counter
+            logMessage(vcu_connection_state == HEARTBEAT_LOST ? "Heartbeat: VCU re-connection\r\n" : "Heartbeat: Heartbeat received from the VCU\r\n", true);
+            vcu_connection_state = HEARTBEAT_PRESENT; // Set state
 		}
 		else{
-			//did not receive notification from ACB
-			if(vcu_connection_state == HEARTBEAT_HAS_VCU){
-
-				if(misses < HEARTBEAT_MAX_MISSES){
-					//losing ACB
-					misses++;
-
-					//just for safety
-					vcu_connection_state = HEARTBEAT_HAS_VCU;
-				}
-				else{
-					//lost ACB
-					vcu_connection_state = HEARTBEAT_LOST_VCU;
-					logMessage("Heartbeat: Lost Connection with VCU", true);
-				}
-			}
-			else if(vcu_connection_state == HEARTBEAT_NO_VCU ){
-				if(misses < HEARTBEAT_MAX_MISSES){
-					//losing ACB
-					misses++;
-
-					//just for safety
-					vcu_connection_state = HEARTBEAT_NO_VCU;
-				}
-				else{
-					//lost ACB
-					vcu_connection_state = HEARTBEAT_NO_VCU;
-					logMessage("Heartbeat: Could not connect with VCU", true);
-				}
-			}
-			else{
-				//acb_connection_state = HEARTBEAT_LOST_VCU;
-			}
+            // Did not receive notification from ACU
+            if(++misses > HEARTBEAT_MAX_MISSES){
+                // Lost ACU
+                logMessage(vcu_connection_state == HEARTBEAT_PRESENT ? "Heartbeat: Lost Connection with VCU\r\n" : "Heartbeat: Could not connect with VCU\r\n", true);
+                vcu_connection_state = HEARTBEAT_LOST;
+            }
 		}
-		vTaskDelay(pdMS_TO_TICKS(HEARTBEAT_TASK_DELAY_MS));
+
+		osThreadYield();
 	}
 }
 
@@ -100,7 +60,7 @@ void StartVcuHrtBeatTask(void *argument){
  *
  * @Brief: This method is used to get the current state of heartbeat
  */
-heatbeat_state_t get_heartbeat_state(){
+HeartbeatState_t get_heartbeat_state(){
 	return vcu_connection_state;
 }
 

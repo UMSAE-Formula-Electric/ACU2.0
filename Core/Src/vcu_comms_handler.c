@@ -9,7 +9,7 @@
 
 extern QueueHandle_t ACB_VCU_CAN_Queue;
 
-void notify_heartbeat_task(heatbeat_notif_vals_t notify_val);
+void notify_heartbeat_task(HeartbeatNotify_t notify_val);
 
 void processVcuToAcuCanIdRxData(const uint8_t *RxData) {
     switch(RxData[0]){
@@ -85,7 +85,7 @@ void send_VCU_mesg(enum ACB_TO_CAN_MSG msg){
 	sendCan(&hcan1, &data, 1, CAN_ACU_TO_VCU_ID, CAN_RTR_DATA, CAN_NO_EXT);
 }
 
-void notify_heartbeat_task(heatbeat_notif_vals_t notify_val){
+void notify_heartbeat_task(HeartbeatNotify_t notify_val){
 	TaskHandle_t task = NULL;
 	task = heartbeat_get_task();
 	if(task != NULL){

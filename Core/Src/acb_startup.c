@@ -118,7 +118,7 @@ void StartAcuStateTask(void *argument){
                     }
                 }
 
-                if(get_heartbeat_state() != HEARTBEAT_HAS_VCU) {
+                if(get_heartbeat_state() != HEARTBEAT_PRESENT) {
                     go_idle();
                 }
 
@@ -150,7 +150,7 @@ void StartAcuStateTask(void *argument){
                     }
                 }
 
-                if(get_heartbeat_state() != HEARTBEAT_HAS_VCU) {
+                if(get_heartbeat_state() != HEARTBEAT_PRESENT) {
                     go_idle();
                 }
 
