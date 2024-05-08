@@ -83,8 +83,10 @@ uint8_t open_airs(){
  */
 uint8_t startup_precharge(){
 	uint8_t precharge_success = 0;
+
 	HAL_GPIO_WritePin(AIR_NEG_CTRL_GPIO_Port, AIR_NEG_CTRL_Pin, GPIO_PIN_SET);
 	vTaskDelay(pdMS_TO_TICKS(AIR_CLOSE_DELAY));
+
 	if(!DISABLE_PRECHARGE_CHECK) {
 		if(HAL_GPIO_ReadPin(AIR_NEG_FB_GPIO_Port, AIR_NEG_FB_Pin) != 1){
             resetAirCtrl();
@@ -92,6 +94,7 @@ uint8_t startup_precharge(){
 			return precharge_success;
 		}
         HAL_GPIO_WritePin(PRECHRG_CTRL_GPIO_Port, PRECHRG_CTRL_Pin, GPIO_PIN_SET);
+        led_set_1_blue();
 		vTaskDelay(pdMS_TO_TICKS(5000));
 	} else {
         HAL_GPIO_WritePin(PRECHRG_CTRL_GPIO_Port, PRECHRG_CTRL_Pin, GPIO_PIN_SET);

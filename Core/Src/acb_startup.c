@@ -24,10 +24,10 @@
 
 #define HOON_MODE 0
 
-#define DISABLE_SAFETY_LOOP_CHECK 0
+#define DISABLE_SAFETY_LOOP_CHECK 1
 #define DISABLE_MC_HEARTBEAT_CHECK 0
-#define DISABLE_AIRS_CHECK 0
-#define DISABLE_PRECHARGE_CHECK 0
+#define DISABLE_AIRS_CHECK 1
+#define DISABLE_PRECHARGE_CHECK 1
 #define DISABLE_TSA_CHECKS 0
 
 ////////////////
@@ -71,12 +71,13 @@ void StartAcuStateTask(void *argument){
         state = get_car_state();
         switch(state){
             case IDLE:
+            	let_set_1_red();
                 //wait for button press
                 retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
-                led_clear_1();
                 if(retRTOS == pdTRUE && ulNotifiedValue == TSA_BUTTON_PRESS){
                     go_tsa();
                 }
+
                 //check the status of the safety loop and send it to VCU
                 //so that the VCU can inform the driver
                 if(!DISABLE_SAFETY_LOOP_CHECK) {
@@ -90,8 +91,9 @@ void StartAcuStateTask(void *argument){
                 break;
 
             case TRACTIVE_SYSTEM_ACTIVE:
+                led_set_1_green();
+                led_set_2_red();
                 retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
-                led_set_1_blue();
                 if(retRTOS == pdPASS){
                     if(ulNotifiedValue == RTD_BUTTON_PRESS){
                         go_rtd();
@@ -128,6 +130,8 @@ void StartAcuStateTask(void *argument){
             case READY_TO_DRIVE:
                 retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
                 led_set_1_green();
+                led_set_2_green();
+
                 if (retRTOS == pdPASS){
                     if(ulNotifiedValue == RTD_BUTTON_PRESS ||ulNotifiedValue == TSA_BUTTON_PRESS || ulNotifiedValue == KILL_SWITCH_PRESS){
                         go_idle();
@@ -178,25 +182,24 @@ void go_idle(){
 	if(air_state != 0){
 		 log_and_handle_error(ERROR_AIR_WELD, &air_weld_handler);
 	}
+
 	cooling_disable_pump();
 	cooling_disable_rad_fans();
-	led_set_2_green();
+	led_clear_all_leds();
 }
 
 //function to close airs, power mc
 void go_tsa(){
-	HAL_GPIO_WritePin(ACU_LED2_BLUE_GPIO_Port, ACU_LED2_BLUE_Pin, GPIO_PIN_RESET);
+	let_set_1_blue();
 	//Tractive System Active Procedure
 
 	if(DISABLE_TSA_CHECKS) {
-		led_set_2_red();
 		if(!DISABLE_PRECHARGE_CHECK) {
 			startup_precharge();
 		}
 		close_airs();
 		send_VCU_mesg(CAN_ACB_TSA_ACK);
 		set_car_state(TRACTIVE_SYSTEM_ACTIVE);
-
 		return;
 	}
 
@@ -234,7 +237,7 @@ void go_tsa(){
  * it work off the IGBT temperatures.
  */
 void go_rtd(){
-	HAL_GPIO_WritePin(ACU_LED2_BLUE_GPIO_Port, ACU_LED2_BLUE_Pin, GPIO_PIN_SET);
+	led_set_2_blue();
 	sound_buzzer();
 	set_car_state(READY_TO_DRIVE);
 	send_VCU_mesg(CAN_ACB_RTD_ACK);
