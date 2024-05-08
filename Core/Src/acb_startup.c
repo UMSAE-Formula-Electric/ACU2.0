@@ -75,8 +75,9 @@ void StartAcuStateTask(void *argument){
                 }
                 break;
             case TRACTIVE_SYSTEM_ACTIVE:
-                led_set_1_white();
+                led_set_1_green();
                 led_set_2_red();
+
                 retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
                 if(retRTOS == pdPASS){
                     if(ulNotifiedValue == RTD_BUTTON_PRESS){
@@ -88,12 +89,12 @@ void StartAcuStateTask(void *argument){
                 }
                 break;
             case READY_TO_DRIVE:
-                retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
                 led_set_1_green();
                 led_set_2_green();
 
+                retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
                 if (retRTOS == pdPASS){
-                    if(ulNotifiedValue == RTD_BUTTON_PRESS || ulNotifiedValue == TSA_BUTTON_PRESS) {// || ulNotifiedValue == KILL_SWITCH_PRESS){
+                    if(ulNotifiedValue == RTD_BUTTON_PRESS || ulNotifiedValue == TSA_BUTTON_PRESS || ulNotifiedValue == KILL_SWITCH_PRESS){
                         go_idle();
                     }
                     else{

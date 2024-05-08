@@ -11,6 +11,6 @@ void send_TSA_nack();
 void send_precharge_pass();
 void send_precharge_fail();
 void send_air_fail();
-void send_VCU_mesg(enum ACB_TO_CAN_MSG msg);
+void send_VCU_mesg(enum STARTUP_STATUS_NOTIFY_MSG msg);
 
 #endif

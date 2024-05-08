@@ -6,6 +6,7 @@
 #include "car_state.h"
 #include "acb_startup.h"
 #include "heartbeat.h"
+#include "can_utils.h"
 
 extern QueueHandle_t ACB_VCU_CAN_Queue;
 
@@ -80,7 +81,7 @@ void process_VCU_CAN_packets(void *argument){
 }
 
 
-void send_VCU_mesg(enum ACB_TO_CAN_MSG msg){
+void send_VCU_mesg(enum STARTUP_STATUS_NOTIFY_MSG msg){
 	uint8_t data = (uint8_t)msg;
 	sendCan(&hcan1, &data, 1, CAN_ACU_TO_VCU_ID, CAN_RTR_DATA, CAN_NO_EXT);
 }
