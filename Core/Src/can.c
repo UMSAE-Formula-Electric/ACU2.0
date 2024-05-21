@@ -21,6 +21,7 @@
 #include "can.h"
 
 /* USER CODE BEGIN 0 */
+#include "bms_can_utils.h"
 #include "vcu_comms_handler.h"
 #include "motor_controller_can_utils.h"
 #include "logger.h"
@@ -147,19 +148,19 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
     CAN_RxPacketTypeDef rxPacket;
-    uint32_t currQueueSize = osMessageQueueGetCount(canRxPacketQueueHandle);
-    uint32_t maxQueueCapacity = osMessageQueueGetCapacity(canRxPacketQueueHandle);
-	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &(rxPacket.rxPacketHeader), rxPacket.rxPacketData) == HAL_OK) {
-		if((osMessageQueuePut(canRxPacketQueueHandle, &rxPacket, 0, 0) == osOK)) {
 
-		} else if (currQueueSize == maxQueueCapacity) {  /* Queue is full */
-			logMessage("Error adding received message to the CAN Rx queue because the queue is full.\r\n", true);
-		}
-		else {  /* Error receiving message from CAN */
-			logMessage("Error receiving message from the CAN Bus and adding it to the Rx queue.\r\n", true);
-		}
-	}
-    osThreadYield();
+    if (!(HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &(rxPacket.rxPacketHeader), rxPacket.rxPacketData) == HAL_OK &&
+          osMessageQueuePut(canRxPacketQueueHandle, &rxPacket, 0, 0) == osOK)) {
+        uint32_t currQueueSize = osMessageQueueGetCount(canRxPacketQueueHandle);
+        uint32_t maxQueueCapacity = osMessageQueueGetCapacity(canRxPacketQueueHandle);
+
+        if (currQueueSize == maxQueueCapacity) {  /* Queue is full */
+            logMessage("Error adding received message to the CAN Rx queue because the queue is full.\r\n", true);
+        }
+        else {  /* Error receiving message from CAN */
+            logMessage("Error receiving message from the CAN Bus and adding it to the Rx queue.\r\n", true);
+        }
+    }
 }
 
 void HAL_CAN_RxFifo0FullCallback(CAN_HandleTypeDef *hcan)
@@ -189,6 +190,7 @@ void StartCanRxTask(void *argument)
 
     CAN_RxPacketTypeDef rxPacket;
     osStatus_t isMsgTakenFromQueue;
+    uint32_t canID;
 
     for (;;)
     {
@@ -204,22 +206,73 @@ void StartCanRxTask(void *argument)
             }
             if (rxPacket.rxPacketHeader.IDE == CAN_ID_STD)
             {
-                switch (rxPacket.rxPacketHeader.StdId)
+                canID = rxPacket.rxPacketHeader.StdId;
+                if (canID == CAN_VCU_TO_ACU_ID)
                 {
-                    case CAN_VCU_TO_ACU_ID:
-                        processVcuToAcuCanIdRxData(rxPacket.rxPacketData);
-                        break;
-                    case CAN_VCU_SET_ACB_STATE_ID:
-                        processVcuSetAcuStateCanIdRxData(rxPacket.rxPacketData);
-                        break;
-                    case CAN_MC_RX_INTERNAL_VOLTAGES:
-                    	mc_process_internal_volt_can(rxPacket.rxPacketData);
-                    	break;
-                    case CAN_MC_RX_VOLT_ID:
-						mc_process_volt_can(rxPacket.rxPacketData);
-                    	break;
-                    default:
-                        break;
+                    processVcuToAcuCanIdRxData(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_VCU_SET_ACB_STATE_ID)
+                {
+                    processVcuSetAcuStateCanIdRxData(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_BMS_OVERALL_ID)
+                {
+                    process_bms_overall_packet(rxPacket.rxPacketData);
+                    //notify_heartbeat_task_bms(); // dead function in old code?
+                }
+                else if (canID == CAN_BMS_DIAGNOSTIC_ID)
+                {
+                    process_bms_diagnostic_packet(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_BMS_VOLTAGE_ID)
+                {
+                    process_bms_voltage_packet(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_BMS_MODULE_TEMPERATURE)
+                {
+                    process_bms_module_temp_can(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_BMS_CELL_TEMPERATURE)
+                {
+                    process_bms_temp_packet(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_BMS_CELL_BALANCING_RATE)
+                {
+                    process_bms_cell_temp_balancing_rate_can(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_BMS_STATE_OF_CHARGE)
+                {
+                    process_bms_state_of_charge_can(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_BMS_CONTACTOR_CONTROL)
+                {
+                    process_bms_contactor_control_can(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_BMS_ENERGY_PARAM)
+                {
+                    process_bms_energy_param_can(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_BMS_STATS)
+                {
+                    process_bms_stats_can(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_BMS_EVENTS)
+                {
+                    process_bms_events_can(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_MC_RX_INTERNAL_VOLTAGES)
+                {
+                    mc_process_internal_volt_can(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_MC_RX_VOLT_ID)
+                {
+                    mc_process_volt_can(rxPacket.rxPacketData);
+                }
+                else
+                {
+                    // Should typeA and typeB function call go here? -> it contains all the if statements
+                    // and could remove the function and only have the if that's less confusing
+                    process_typeA_and_typeB_can_packets(&rxPacket);
                 }
             }
         }
