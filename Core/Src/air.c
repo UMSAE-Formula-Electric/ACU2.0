@@ -9,8 +9,8 @@
 #include "acb_startup.h"
 #include "can.h"
 
-#define AIR_CLOSE_DELAY 1000
-#define AIR_OPEN_DELAY  1000
+#define AIR_CLOSE_DELAY 500
+#define AIR_OPEN_DELAY  500
 
 #define DISABLE_AIRS_CHECK 0
 #define DISABLE_PRECHARGE_CHECK 0
@@ -32,6 +32,7 @@ void resetAirCtrl() {
 air_status_t close_airs(){
 	air_status_t air_state = AIR_CLOSE_SUCCESS;
     setAirCtrl();
+	vTaskDelay(pdMS_TO_TICKS(AIR_CLOSE_DELAY));
 
 	if(!DISABLE_AIRS_CHECK) {
 		if(HAL_GPIO_ReadPin(AIR_POS_FB_GPIO_Port, AIR_POS_FB_Pin) != 1){
@@ -78,27 +79,30 @@ uint8_t open_airs(){
  * @Brief: This function executes the pre charge routine. This function must be called
  * from within a task. This function will check to see if the
  */
+
 precharge_status_t startup_precharge(){
 	precharge_status_t precharge_success = PRECHARGE_FAILED;
 
 	HAL_GPIO_WritePin(AIR_NEG_CTRL_GPIO_Port, AIR_NEG_CTRL_Pin, GPIO_PIN_SET);
 	vTaskDelay(pdMS_TO_TICKS(AIR_CLOSE_DELAY));
 
-	if(!DISABLE_PRECHARGE_CHECK) {
+	if(!DISABLE_AIRS_CHECK) {
 		if(HAL_GPIO_ReadPin(AIR_NEG_FB_GPIO_Port, AIR_NEG_FB_Pin) != 1){
-            resetAirCtrl();
+			resetAirCtrl();
 			return precharge_success;
 		}
-        HAL_GPIO_WritePin(PRECHRG_CTRL_GPIO_Port, PRECHRG_CTRL_Pin, GPIO_PIN_SET);
-        led_set_1_white();
-		vTaskDelay(pdMS_TO_TICKS(5000));
-	} else {
-        HAL_GPIO_WritePin(PRECHRG_CTRL_GPIO_Port, PRECHRG_CTRL_Pin, GPIO_PIN_SET);
 	}
 
-	if(isMCBusCharged() == BUS_CHARGED){
+	HAL_GPIO_WritePin(PRECHRG_CTRL_GPIO_Port, PRECHRG_CTRL_Pin, GPIO_PIN_SET);
+	led_set_1_white();
+	vTaskDelay(pdMS_TO_TICKS(5000));
+
+	if(isMCBusCharged() == BUS_CHARGED || DISABLE_PRECHARGE_CHECK){
+		HAL_GPIO_WritePin(AIR_POS_CTRL_GPIO_Port, AIR_POS_CTRL_Pin, GPIO_PIN_SET);
+		vTaskDelay(pdMS_TO_TICKS(AIR_CLOSE_DELAY));
 		precharge_success = PRECHARGE_SUCCESS;
 	}
+	HAL_GPIO_WritePin(PRECHRG_CTRL_GPIO_Port, PRECHRG_CTRL_Pin, GPIO_PIN_RESET);
 	return precharge_success;
 
 }

@@ -166,7 +166,7 @@ void StartCoolingTask(void *argument){
 
 void enableCoolingGently() {
 	cooling_enable_pump();
-	vTaskDelay(pdMS_TO_TICKS(5000));
+	vTaskDelay(pdMS_TO_TICKS(2000));
 	cooling_enable_rad_fans();
 }
 

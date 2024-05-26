@@ -24,9 +24,9 @@
 
 #define HOON_MODE 0
 
-#define DISABLE_SAFETY_LOOP_CHECK 1
-#define DISABLE_MC_HEARTBEAT_CHECK 1
-#define DISABLE_AIRS_CHECK 1
+#define DISABLE_SAFETY_LOOP_CHECK 0
+#define DISABLE_MC_HEARTBEAT_CHECK 0
+#define DISABLE_AIRS_CHECK 0
 #define DISABLE_PRECHARGE_CHECK 1
 #define DISABLE_TSA_CHECKS 0
 
@@ -73,6 +73,10 @@ void StartAcuStateTask(void *argument){
                 if(retRTOS == pdTRUE && ulNotifiedValue == TSA_BUTTON_PRESS){
                     go_tsa();
                 }
+                else if(retRTOS == pdTRUE && (ulNotifiedValue == RTD_BUTTON_PRESS || ulNotifiedValue == TSA_BUTTON_PRESS)) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
+                    go_idle();
+                }
+
                 break;
             case TRACTIVE_SYSTEM_ACTIVE:
                 led_set_1_green();
@@ -83,7 +87,7 @@ void StartAcuStateTask(void *argument){
                     if(ulNotifiedValue == RTD_BUTTON_PRESS){
                         go_rtd();
                     }
-                    else if(ulNotifiedValue == TSA_BUTTON_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
+                    else if(ulNotifiedValue == KILL_SWITCH_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
                         go_idle();
                     }
                 }
@@ -94,7 +98,7 @@ void StartAcuStateTask(void *argument){
 
                 retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
                 if (retRTOS == pdPASS){
-                    if(ulNotifiedValue == RTD_BUTTON_PRESS || ulNotifiedValue == TSA_BUTTON_PRESS || ulNotifiedValue == KILL_SWITCH_PRESS){
+                    if(ulNotifiedValue == KILL_SWITCH_PRESS){
                         go_idle();
                     }
                     else{
@@ -105,7 +109,7 @@ void StartAcuStateTask(void *argument){
             default:
                 break;
         }
-		vTaskDelay(pdMS_TO_TICKS(100));
+		vTaskDelay(pdMS_TO_TICKS(25));
 
         if(get_heartbeat_state() != HEARTBEAT_PRESENT) {
             go_idle();
@@ -150,6 +154,7 @@ void go_tsa(){
 					send_VCU_mesg(CAN_ACB_TSA_ACK);
 				} else{
 					log_and_handle_error(ERROR_AIR_FAIL_TO_CLOSE, &air_close_fail_handler);
+					go_idle();
 				}
 			}
 		}
@@ -158,9 +163,9 @@ void go_tsa(){
 		}
 		open_precharge();
 
-		if(get_car_state() != TRACTIVE_SYSTEM_ACTIVE) {
-			go_idle();
-		}
+//		if(get_car_state() != TRACTIVE_SYSTEM_ACTIVE) {
+//			go_idle();
+//		}
 	}
 
 
@@ -186,10 +191,10 @@ loop_status_t checkSafetyLoop() {
  * it work off the IGBT temperatures.
  */
 void go_rtd(){
+	send_VCU_mesg(CAN_ACB_RTD_ACK);
 	led_set_2_blue();
 	sound_buzzer();
 	set_car_state(READY_TO_DRIVE);
-	send_VCU_mesg(CAN_ACB_RTD_ACK);
 	led_set_2_purple();
 	enableCoolingGently();
 }
