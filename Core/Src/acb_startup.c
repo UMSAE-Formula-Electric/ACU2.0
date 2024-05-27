@@ -25,7 +25,7 @@
 #define HOON_MODE 0
 
 #define DISABLE_SAFETY_LOOP_CHECK 0
-#define DISABLE_MC_HEARTBEAT_CHECK 0
+#define DISABLE_MC_HEARTBEAT_CHECK 1
 #define DISABLE_AIRS_CHECK 0
 #define DISABLE_PRECHARGE_CHECK 1
 #define DISABLE_TSA_CHECKS 0
@@ -73,9 +73,9 @@ void StartAcuStateTask(void *argument){
                 if(retRTOS == pdTRUE && ulNotifiedValue == TSA_BUTTON_PRESS){
                     go_tsa();
                 }
-                else if(retRTOS == pdTRUE && (ulNotifiedValue == RTD_BUTTON_PRESS || ulNotifiedValue == TSA_BUTTON_PRESS)) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
-                    go_idle();
-                }
+//                else if(retRTOS == pdTRUE && (ulNotifiedValue == RTD_BUTTON_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
+//                    go_idle();
+//                }
 
                 break;
             case TRACTIVE_SYSTEM_ACTIVE:
@@ -109,15 +109,23 @@ void StartAcuStateTask(void *argument){
             default:
                 break;
         }
-		vTaskDelay(pdMS_TO_TICKS(25));
+		//vTaskDelay(pdMS_TO_TICKS(25));
 
         if(get_heartbeat_state() != HEARTBEAT_PRESENT) {
-            go_idle();
+        	led_clear_all_leds();
+        	led_set_2_blue();
+        	go_idle();
+        	led_clear_all_leds();
         }
 
         if(checkSafetyLoop() != SAFETY_LOOP_CLOSED) {
+        	led_clear_all_leds();
+        	led_set_2_red();
         	go_idle();
+        	led_clear_all_leds();
         }
+
+        osThreadYield();
 
 	}
 	vTaskDelete( NULL );
@@ -174,7 +182,7 @@ loop_status_t checkSafetyLoop() {
 	if(!DISABLE_SAFETY_LOOP_CHECK) {
 		safety_loop = check_safety_loop();
 		if(safety_loop != SAFETY_LOOP_CLOSED) {
-			vTaskDelay(pdMS_TO_TICKS(100));
+			vTaskDelay(pdMS_TO_TICKS(50));
 			safety_loop = check_safety_loop();
 		}
 	}
@@ -191,12 +199,12 @@ loop_status_t checkSafetyLoop() {
  * it work off the IGBT temperatures.
  */
 void go_rtd(){
-	send_VCU_mesg(CAN_ACB_RTD_ACK);
 	led_set_2_blue();
 	sound_buzzer();
 	set_car_state(READY_TO_DRIVE);
 	led_set_2_purple();
 	enableCoolingGently();
+	send_VCU_mesg(CAN_ACB_RTD_ACK);
 }
 
 /*
