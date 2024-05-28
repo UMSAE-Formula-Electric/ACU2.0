@@ -159,7 +159,7 @@ void StartCoolingTask(void *argument){
         vTaskDelay(pdMS_TO_TICKS(3000));
         cooling_disable_rad_fans();
       }
-      vTaskDelay(pdMS_TO_TICKS(1000));
+      osThreadYield();
     }
 
 }

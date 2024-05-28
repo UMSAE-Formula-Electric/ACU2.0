@@ -4,7 +4,7 @@
 #include "freertos_task_handles.h"
 #include "iwdg.h"
 
-#define HEARTBEAT_TASK_DELAY_MS     50
+#define HEARTBEAT_TASK_DELAY_MS     100
 #define HEARTBEAT_MAX_MISSES		10 //Max number of times we can miss a heartbeat notification
 
 static HeartbeatState_t vcu_connection_state = HEARTBEAT_NONE;

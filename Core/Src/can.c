@@ -217,6 +217,7 @@ void StartCanRxTask(void *argument)
                 }
             }
         }
+        osThreadYield();
     }
 }
 
@@ -241,6 +242,7 @@ void StartCanTxTask(void *argument){
                 logMessage("ACU sent a message to the CAN Bus.\r\n", true);
             }
         }
+        osThreadYield();
     }
 }
 /* USER CODE END 1 */

@@ -64,6 +64,23 @@ void StartAcuStateTask(void *argument){
 	for(;;){
         kickWatchdogBit(osThreadGetId());
 
+        if(get_heartbeat_state() != HEARTBEAT_PRESENT) {
+        	vTaskDelay(100);
+        	led_clear_all_leds();
+        	led_set_2_blue();
+        	go_idle();
+        	vTaskDelay(100);
+        	led_clear_all_leds();
+        }
+
+        if(checkSafetyLoop() != SAFETY_LOOP_CLOSED) {
+        	led_clear_all_leds();
+        	led_set_2_red();
+        	go_idle();
+        	vTaskDelay(50);
+        	led_clear_all_leds();
+        }
+
         state = get_car_state();
         switch(state){
             case IDLE:
@@ -111,22 +128,7 @@ void StartAcuStateTask(void *argument){
         }
 		//vTaskDelay(pdMS_TO_TICKS(25));
 
-        if(get_heartbeat_state() != HEARTBEAT_PRESENT) {
-        	led_clear_all_leds();
-        	led_set_2_blue();
-        	go_idle();
-        	led_clear_all_leds();
-        }
-
-        if(checkSafetyLoop() != SAFETY_LOOP_CLOSED) {
-        	led_clear_all_leds();
-        	led_set_2_red();
-        	go_idle();
-        	led_clear_all_leds();
-        }
-
         osThreadYield();
-
 	}
 	vTaskDelete( NULL );
 }
@@ -135,20 +137,25 @@ void StartAcuStateTask(void *argument){
 void go_idle(){
 	uint8_t air_state = 0;
 	//notify VCU of state change
-	set_car_state(IDLE);
+
+	//if(get_car_state() != IDLE) {
 	send_VCU_mesg(CAN_GO_IDLE_REQ);
+	//}
 	//disable mc
 
 	//open airs
-	open_precharge();
-	air_state = open_airs();
-	if(air_state != 0){
-		 log_and_handle_error(ERROR_AIR_WELD, &air_weld_handler);
+	if(get_car_state() != IDLE) {
+		open_precharge();
+		air_state = open_airs();
+		if(air_state != 0){
+			 log_and_handle_error(ERROR_AIR_WELD, &air_weld_handler);
+		}
+
+		cooling_disable_pump();
+		cooling_disable_rad_fans();
 	}
 
-	cooling_disable_pump();
-	cooling_disable_rad_fans();
-	led_clear_all_leds();
+	set_car_state(IDLE);
 }
 
 //function to close airs, power mc

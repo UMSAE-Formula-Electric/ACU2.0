@@ -93,7 +93,7 @@ int main(void)
   MX_GPIO_Init();
   MX_CAN1_Init();
   MX_USART2_Init();
-  //HAL_GPIO_WritePin(MC_PWR_CTRL_GPIO_Port, MC_PWR_CTRL_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(MC_PWR_CTRL_GPIO_Port, MC_PWR_CTRL_Pin, GPIO_PIN_SET);
 
   /* USER CODE BEGIN 2 */
 //  HAL_GPIO_WritePin(AIR_POS_CTRL_GPIO_Port, AIR_POS_CTRL_Pin, GPIO_PIN_SET);

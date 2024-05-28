@@ -60,35 +60,35 @@ osThreadId_t acuStateTaskHandle;
 const osThreadAttr_t acuStateTask_attributes = {
   .name = "acuStateTask",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for vcuHrtBeatTask */
 osThreadId_t vcuHrtBeatTaskHandle;
 const osThreadAttr_t vcuHrtBeatTask_attributes = {
   .name = "vcuHrtBeatTask",
   .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for canTxTask */
 osThreadId_t canTxTaskHandle;
 const osThreadAttr_t canTxTask_attributes = {
   .name = "canTxTask",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for canRxTask */
 osThreadId_t canRxTaskHandle;
 const osThreadAttr_t canRxTask_attributes = {
   .name = "canRxTask",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for coolingTask */
 osThreadId_t coolingTaskHandle;
 const osThreadAttr_t coolingTask_attributes = {
   .name = "coolingTask",
   .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for watchDogTask */
 osThreadId_t watchDogTaskHandle;
@@ -216,7 +216,7 @@ void StartDefaultTask(void *argument)
   for(;;)
   {
       kickWatchdogBit(osThreadGetId());
-    osDelay(1);
+      osThreadYield();
   }
   /* USER CODE END StartDefaultTask */
 }
