@@ -56,14 +56,14 @@ void StartAcuStateTask(void *argument){
 
 	//Keep user led on to simulate LV key is on
 	enum CAR_STATE state;
-	BaseType_t retRTOS = 0;
-	uint32_t ulNotifiedValue;
+	osStatus_t retRTOS = 0;
+	uint8_t ulNotifiedValue;
 	loop_status_t saftey_loop = SAFETY_LOOP_CLOSED;
 
 
 	for(;;){
         kickWatchdogBit(osThreadGetId());
-
+        led_clear_all_leds();
         if(get_heartbeat_state() != HEARTBEAT_PRESENT) {
         	vTaskDelay(100);
         	led_clear_all_leds();
@@ -86,9 +86,11 @@ void StartAcuStateTask(void *argument){
             case IDLE:
             	led_set_1_red();
                 //wait for button press
-                retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
-                if(retRTOS == pdTRUE && ulNotifiedValue == TSA_BUTTON_PRESS){
-                    go_tsa();
+                retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
+                if(retRTOS == osOK){
+                	if(ulNotifiedValue == 32){
+                		go_tsa();
+                	}
                 }
 //                else if(retRTOS == pdTRUE && (ulNotifiedValue == RTD_BUTTON_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
 //                    go_idle();
@@ -99,10 +101,10 @@ void StartAcuStateTask(void *argument){
                 led_set_1_green();
                 led_set_2_red();
 
-                retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
-                if(retRTOS == pdPASS){
-                    if(ulNotifiedValue == RTD_BUTTON_PRESS){
-                        go_rtd();
+                retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
+                if(retRTOS == osOK){
+                    if(ulNotifiedValue == 0){
+                         go_rtd();
                     }
                     else if(ulNotifiedValue == KILL_SWITCH_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
                         go_idle();
@@ -113,8 +115,8 @@ void StartAcuStateTask(void *argument){
                 led_set_1_green();
                 led_set_2_green();
 
-                retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
-                if (retRTOS == pdPASS){
+                retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
+                if (retRTOS == osOK){
                     if(ulNotifiedValue == KILL_SWITCH_PRESS){
                         go_idle();
                     }
@@ -126,9 +128,7 @@ void StartAcuStateTask(void *argument){
             default:
                 break;
         }
-		//vTaskDelay(pdMS_TO_TICKS(25));
-
-        osThreadYield();
+        vTaskDelay(100);
 	}
 	vTaskDelete( NULL );
 }
@@ -161,6 +161,7 @@ void go_idle(){
 //function to close airs, power mc
 void go_tsa(){
 	led_set_1_blue();
+	send_VCU_mesg(CAN_ACB_TSA_ACK);
 	//Tractive System Active Procedure
 	if(check_safety_loop() == SAFETY_LOOP_CLOSED || DISABLE_SAFETY_LOOP_CHECK){  //check if safety loop is closed is Pressed
 		if(startup_precharge() == PRECHARGE_SUCCESS || DISABLE_PRECHARGE_CHECK){

@@ -95,7 +95,7 @@ osThreadId_t watchDogTaskHandle;
 const osThreadAttr_t watchDogTask_attributes = {
   .name = "watchDogTask",
   .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for canRxPacketQueue */
 osMessageQueueId_t canRxPacketQueueHandle;
@@ -106,6 +106,11 @@ const osMessageQueueAttr_t canRxPacketQueue_attributes = {
 osMessageQueueId_t canTxPacketQueueHandle;
 const osMessageQueueAttr_t canTxPacketQueue_attributes = {
   .name = "canTxPacketQueue"
+};
+/* Definitions for setCarStateQueue */
+osMessageQueueId_t setCarStateQueueHandle;
+const osMessageQueueAttr_t setCarStateQueue_attributes = {
+  .name = "setCarStateQueue"
 };
 /* Definitions for iwdgEventGroup */
 osEventFlagsId_t iwdgEventGroupHandle;
@@ -156,6 +161,9 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of canTxPacketQueue */
   canTxPacketQueueHandle = osMessageQueueNew (32, sizeof(CAN_TxPacketTypeDef), &canTxPacketQueue_attributes);
+
+  /* creation of setCarStateQueue */
+  setCarStateQueueHandle = osMessageQueueNew (5, sizeof(uint8_t), &setCarStateQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */

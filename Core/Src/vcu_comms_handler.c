@@ -25,35 +25,17 @@ void processVcuToAcuCanIdRxData(const uint8_t *RxData) {
 
 void processVcuSetAcuStateCanIdRxData(const uint8_t *RxData) {
     TaskHandle_t startupTask = NULL;
+    osStatus_t retOS;
 
     switch(RxData[0]){
         case TRACTIVE_SYSTEM_ACTIVE:
-            startupTask = get_startup_task();
-            if(startupTask != NULL){
-                xTaskNotify( startupTask, TSA_BUTTON_PRESS, eSetValueWithOverwrite);
-            }
-            else{
-                //handle error
-            }
-            //notify the task
+            retOS = osMessageQueuePut(setCarStateQueueHandle, (uint8_t) TSA_BUTTON_PRESS, 0, 0);
             break;
         case READY_TO_DRIVE:
-            startupTask = get_startup_task();
-            if(startupTask != NULL){
-                xTaskNotify( startupTask, RTD_BUTTON_PRESS, eSetValueWithOverwrite);
-            }
-            else{
-                //handle error
-            }
+            osMessageQueuePut(setCarStateQueueHandle, RTD_BUTTON_PRESS, 0, 0);
             break;
         case IDLE:
-            startupTask = get_startup_task();
-            if(startupTask != NULL){
-                xTaskNotify( startupTask, KILL_SWITCH_PRESS, eSetValueWithOverwrite);
-            }
-            else{
-                //handle error
-            }
+            osMessageQueuePut(setCarStateQueueHandle, KILL_SWITCH_PRESS, 0, 0);
             break;
         default:
             break;

@@ -3,6 +3,9 @@
 #include "car_state.h"
 #include "can.h"
 
+
+extern osMessageQueueId_t setCarStateQueueHandle;
+
 void processVcuSetAcuStateCanIdRxData(const uint8_t *RxData);
 void processVcuToAcuCanIdRxData(const uint8_t *RxData);
 uint8_t vcu_comms_init();
