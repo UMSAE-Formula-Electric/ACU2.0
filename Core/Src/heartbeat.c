@@ -49,7 +49,7 @@ void StartVcuHrtBeatTask(void *argument){
                 vcu_connection_state = HEARTBEAT_LOST;
             }
 		}
-		vTaskDelay(pdMS_TO_TICKS(25));
+		vTaskDelay(pdMS_TO_TICKS(HEARTBEAT_TASK_DELAY_MS / 4));
 		//osThreadYield();
 	}
 }
