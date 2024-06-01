@@ -25,8 +25,6 @@ void led_clear_2();
 
 #define TASK_DELAY 50
 
-void StartDebugLEDTask(void* argument);
-
 enum LED_STATE {
 	IDLE_LED = 0,
 	TSA_REQUEST,

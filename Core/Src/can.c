@@ -149,19 +149,16 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     CAN_RxPacketTypeDef rxPacket;
     uint32_t currQueueSize = osMessageQueueGetCount(canRxPacketQueueHandle);
     uint32_t maxQueueCapacity = osMessageQueueGetCapacity(canRxPacketQueueHandle);
-    uint32_t fillLevel = HAL_CAN_GetRxFifoFillLevel(hcan, CAN_RX_FIFO0);
-    if(HAL_CAN_GetRxFifoFillLevel(hcan, CAN_RX_FIFO0)) {
-		if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &(rxPacket.rxPacketHeader), rxPacket.rxPacketData) == HAL_OK) {
-			if((osMessageQueuePut(canRxPacketQueueHandle, &rxPacket, 0, 0) == osOK)) {
+	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &(rxPacket.rxPacketHeader), rxPacket.rxPacketData) == HAL_OK) {
+		if((osMessageQueuePut(canRxPacketQueueHandle, &rxPacket, 0, 0) == osOK)) {
 
-			} else if (currQueueSize == maxQueueCapacity) {  /* Queue is full */
-				logMessage("Error adding received message to the CAN Rx queue because the queue is full.\r\n", true);
-			}
-			else {  /* Error receiving message from CAN */
-				logMessage("Error receiving message from the CAN Bus and adding it to the Rx queue.\r\n", true);
-			}
+		} else if (currQueueSize == maxQueueCapacity) {  /* Queue is full */
+			logMessage("Error adding received message to the CAN Rx queue because the queue is full.\r\n", true);
 		}
-    }
+		else {  /* Error receiving message from CAN */
+			logMessage("Error receiving message from the CAN Bus and adding it to the Rx queue.\r\n", true);
+		}
+	}
     osThreadYield();
 }
 

@@ -50,7 +50,6 @@ void StartVcuHrtBeatTask(void *argument){
             }
 		}
 		vTaskDelay(pdMS_TO_TICKS(HEARTBEAT_TASK_DELAY_MS / 4));
-		//osThreadYield();
 	}
 }
 
