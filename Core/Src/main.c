@@ -93,6 +93,7 @@ int main(void)
   MX_CAN1_Init();
   MX_USART2_Init();
   /* USER CODE BEGIN 2 */
+//  HAL_GPIO_WritePin(AIR_POS_CTRL_GPIO_Port, AIR_POS_CTRL_Pin, GPIO_PIN_SET);
 
   /* USER CODE END 2 */
 
@@ -193,10 +194,7 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+
   /* USER CODE END Error_Handler_Debug */
 }
 

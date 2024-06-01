@@ -10,6 +10,8 @@
 #include "acb_startup.h"
 #include "gpio.h"
 
+#include "acu_debug_led.h"
+
 #include "error_handler.h"
 
 #include "air.h"
@@ -33,6 +35,7 @@
 ////////////////
 //Error Handlers
 void tsa_check_loop_fail_handler();
+loop_status_t checkSafetyLoop();
 ////////////////
 
 /**
@@ -55,15 +58,10 @@ void StartAcuStateTask(void *argument){
 
 	//Keep user led on to simulate LV key is on
 	enum CAR_STATE state;
-	BaseType_t retRTOS = 0;
-	uint32_t ulNotifiedValue;
+	osStatus_t retRTOS = 0;
+	uint8_t ulNotifiedValue;
 	loop_status_t saftey_loop = SAFETY_LOOP_CLOSED;
 
-	//mc_data_request_init();
-
-#ifdef TEST_BUZZER
-  sound_buzzer_speaker_jenk();
-#endif
 
 	for(;;){
         kickWatchdogBit(osThreadGetId());
@@ -71,94 +69,60 @@ void StartAcuStateTask(void *argument){
         state = get_car_state();
         switch(state){
             case IDLE:
+            	setLEDState(IDLE_LED);
                 //wait for button press
-                retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
-                led_clear_1();
-                if(retRTOS == pdTRUE && ulNotifiedValue == TSA_BUTTON_PRESS){
-                    go_tsa();
+                retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
+                if(retRTOS == osOK){
+                	if(ulNotifiedValue == TSA_BUTTON_PRESS){
+                		go_tsa();
+                	}
                 }
-                //check the status of the safety loop and send it to VCU
-                //so that the VCU can inform the driver
-                if(!DISABLE_SAFETY_LOOP_CHECK) {
-                    if(check_safety_loop() != SAFETY_LOOP_CLOSED){
-                        send_VCU_mesg(CAN_NO_SAFETY_LOOP_SET);
-                    }
-                    else{
-                        send_VCU_mesg(CAN_NO_SAFETY_LOOP_CLEAR);
-                    }
-                }
-                break;
+//                else if(retRTOS == pdTRUE && (ulNotifiedValue == RTD_BUTTON_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
+//                    go_idle();
+//                }
 
+                break;
             case TRACTIVE_SYSTEM_ACTIVE:
-                retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
-                led_set_1_blue();
-                if(retRTOS == pdPASS){
+                setLEDState(TSA);
+
+                retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
+                if(retRTOS == osOK){
                     if(ulNotifiedValue == RTD_BUTTON_PRESS){
-                        go_rtd();
+                         go_rtd();
                     }
-                    else if(ulNotifiedValue == TSA_BUTTON_PRESS || ulNotifiedValue == KILL_SWITCH_PRESS ){
+                    else if(ulNotifiedValue == KILL_SWITCH_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
+                    	setLEDState(VCU_IDLE_REQUEST);
                         go_idle();
                     }
-                    else{
-                      logMessage("Unexpected State Change, TSA", false);
-                      go_idle();
-                    }
                 }
-                else{
-                    //check safety loop state
-                    if(!DISABLE_SAFETY_LOOP_CHECK){
-                        saftey_loop = check_safety_loop();
-                        if(saftey_loop != SAFETY_LOOP_CLOSED){
-                            vTaskDelay(pdMS_TO_TICKS(500));
-                            saftey_loop = check_safety_loop();
-                            if(saftey_loop != SAFETY_LOOP_CLOSED){
-                                log_and_handle_error(ERROR_ACB_SAFETY_LOOP_OPEN, &go_idle);
-                            }
-                        }
-                    }
-                }
-
-                if(get_heartbeat_state() != HEARTBEAT_PRESENT) {
-                    go_idle();
-                }
-
-                //Ready to Drive Procedure
                 break;
-
             case READY_TO_DRIVE:
-                retRTOS = xTaskNotifyWait(0x00,0x00, &ulNotifiedValue, 0);
-                led_set_1_green();
-                if (retRTOS == pdPASS){
-                    if(ulNotifiedValue == RTD_BUTTON_PRESS ||ulNotifiedValue == TSA_BUTTON_PRESS || ulNotifiedValue == KILL_SWITCH_PRESS){
+            	setLEDState(RTD);
+
+                retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
+                if (retRTOS == osOK){
+                    if(ulNotifiedValue == KILL_SWITCH_PRESS){
+                    	setLEDState(VCU_IDLE_REQUEST);
                         go_idle();
                     }
                     else{
                       logMessage("Bad runtime change request", false);
                     }
                 }
-                else{
-                    //check if saftey loop has opened
-                    if(!DISABLE_SAFETY_LOOP_CHECK) {
-                        saftey_loop = check_safety_loop();
-                        if(saftey_loop != SAFETY_LOOP_CLOSED){
-                            vTaskDelay(pdMS_TO_TICKS(500));
-                            saftey_loop = check_safety_loop();
-                            if(saftey_loop != SAFETY_LOOP_CLOSED){
-                                log_and_handle_error(ERROR_ACB_SAFETY_LOOP_OPEN, &go_idle);
-                            }
-                        }
-                    }
-                }
-
-                if(get_heartbeat_state() != HEARTBEAT_PRESENT) {
-                    go_idle();
-                }
-
                 break;
             default:
                 break;
         }
-		vTaskDelay(pdMS_TO_TICKS(100));
+        if(get_heartbeat_state() != HEARTBEAT_PRESENT) {
+        	go_idle();
+        	setLEDState(NO_VCU_HEARTBEAT);
+        }
+
+        if(checkSafetyLoop() != SAFETY_LOOP_CLOSED) {
+        	go_idle();
+        	setLEDState(SAFETY_LOOP_OPEN_LED);
+        }
+        vTaskDelay(pdMS_TO_TICKS(25));
 	}
 	vTaskDelete( NULL );
 }
@@ -167,61 +131,66 @@ void StartAcuStateTask(void *argument){
 void go_idle(){
 	uint8_t air_state = 0;
 	//notify VCU of state change
-	set_car_state(IDLE);
+
+	//if(get_car_state() != IDLE) {
 	send_VCU_mesg(CAN_GO_IDLE_REQ);
+	//}
 	//disable mc
-#ifndef MC_STARTUP_ENABLE
-	shutdown_MC();
-#endif
+
 	//open airs
-	air_state = open_airs();
-	if(air_state != 0){
-		 log_and_handle_error(ERROR_AIR_WELD, &air_weld_handler);
+	if(get_car_state() != IDLE) {
+		open_precharge();
+		air_state = open_airs();
+		if(air_state != 0){
+			 log_and_handle_error(ERROR_AIR_WELD, &air_weld_handler);
+		}
+
+		cooling_disable_pump();
+		cooling_disable_rad_fans();
 	}
-	cooling_disable_pump();
-	cooling_disable_rad_fans();
-	led_set_2_green();
+
+	set_car_state(IDLE);
 }
 
 //function to close airs, power mc
 void go_tsa(){
-	HAL_GPIO_WritePin(ACU_LED2_BLUE_GPIO_Port, ACU_LED2_BLUE_Pin, GPIO_PIN_RESET);
+	setLEDState(TSA_REQUEST);
+	send_VCU_mesg(CAN_ACB_TSA_ACK);
 	//Tractive System Active Procedure
-
-	if(DISABLE_TSA_CHECKS) {
-		led_set_2_red();
-		if(!DISABLE_PRECHARGE_CHECK) {
-			startup_precharge();
-		}
-		close_airs();
-		send_VCU_mesg(CAN_ACB_TSA_ACK);
-		set_car_state(TRACTIVE_SYSTEM_ACTIVE);
-
-		return;
-	}
-
 	if(check_safety_loop() == SAFETY_LOOP_CLOSED || DISABLE_SAFETY_LOOP_CHECK){  //check if safety loop is closed is Pressed
-
-		if(startup_precharge() || DISABLE_PRECHARGE_CHECK){
-			if(!DISABLE_AIRS_CHECK) {
-				if(close_airs()){
-					log_and_handle_error(ERROR_AIR_FAIL_TO_CLOSE, &air_close_fail_handler);
-				}
-				else{
+		if(startup_precharge() == PRECHARGE_SUCCESS || DISABLE_PRECHARGE_CHECK){
+			if(close_airs() == AIR_CLOSE_SUCCESS || DISABLE_AIRS_CHECK){
 					set_car_state(TRACTIVE_SYSTEM_ACTIVE);
 					send_VCU_mesg(CAN_ACB_TSA_ACK);
+				} else{
+					log_and_handle_error(ERROR_AIR_FAIL_TO_CLOSE, &air_close_fail_handler);
+					setLEDState(FAIL);
+					go_idle();
 				}
-			} else {
-				set_car_state(TRACTIVE_SYSTEM_ACTIVE);
-				send_VCU_mesg(CAN_ACB_TSA_ACK);
 			}
 		}
 		else{
 			log_and_handle_error(ERROR_PRECHAGE_FAIL, &go_idle);
+			setLEDState(FAIL);
 		}
 		open_precharge();
+
+//		if(get_car_state() != TRACTIVE_SYSTEM_ACTIVE) {
+//			go_idle();
+//		}
 	}
 
+
+loop_status_t checkSafetyLoop() {
+	loop_status_t safety_loop = SAFETY_LOOP_CLOSED;
+	if(!DISABLE_SAFETY_LOOP_CHECK) {
+		safety_loop = check_safety_loop();
+		if(safety_loop != SAFETY_LOOP_CLOSED) {
+			vTaskDelay(pdMS_TO_TICKS(50));
+			safety_loop = check_safety_loop();
+		}
+	}
+	return safety_loop;
 }
 
 /*
@@ -234,11 +203,13 @@ void go_tsa(){
  * it work off the IGBT temperatures.
  */
 void go_rtd(){
-	HAL_GPIO_WritePin(ACU_LED2_BLUE_GPIO_Port, ACU_LED2_BLUE_Pin, GPIO_PIN_SET);
+	setLEDState(RTD_REQUEST);
+	setLEDState(BUZZER);
 	sound_buzzer();
+	setLEDState(ENABLE_COOLING);
+	enableCoolingGently();
 	set_car_state(READY_TO_DRIVE);
 	send_VCU_mesg(CAN_ACB_RTD_ACK);
-	enableCoolingGently();
 }
 
 /*

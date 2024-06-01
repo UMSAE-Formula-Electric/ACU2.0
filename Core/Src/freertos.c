@@ -60,42 +60,49 @@ osThreadId_t acuStateTaskHandle;
 const osThreadAttr_t acuStateTask_attributes = {
   .name = "acuStateTask",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for vcuHrtBeatTask */
 osThreadId_t vcuHrtBeatTaskHandle;
 const osThreadAttr_t vcuHrtBeatTask_attributes = {
   .name = "vcuHrtBeatTask",
   .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for canTxTask */
 osThreadId_t canTxTaskHandle;
 const osThreadAttr_t canTxTask_attributes = {
   .name = "canTxTask",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for canRxTask */
 osThreadId_t canRxTaskHandle;
 const osThreadAttr_t canRxTask_attributes = {
   .name = "canRxTask",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for coolingTask */
 osThreadId_t coolingTaskHandle;
 const osThreadAttr_t coolingTask_attributes = {
   .name = "coolingTask",
   .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for watchDogTask */
 osThreadId_t watchDogTaskHandle;
 const osThreadAttr_t watchDogTask_attributes = {
   .name = "watchDogTask",
   .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for DebugLEDTask */
+osThreadId_t DebugLEDTaskHandle;
+const osThreadAttr_t DebugLEDTask_attributes = {
+  .name = "DebugLEDTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for canRxPacketQueue */
 osMessageQueueId_t canRxPacketQueueHandle;
@@ -106,6 +113,11 @@ const osMessageQueueAttr_t canRxPacketQueue_attributes = {
 osMessageQueueId_t canTxPacketQueueHandle;
 const osMessageQueueAttr_t canTxPacketQueue_attributes = {
   .name = "canTxPacketQueue"
+};
+/* Definitions for setCarStateQueue */
+osMessageQueueId_t setCarStateQueueHandle;
+const osMessageQueueAttr_t setCarStateQueue_attributes = {
+  .name = "setCarStateQueue"
 };
 /* Definitions for iwdgEventGroup */
 osEventFlagsId_t iwdgEventGroupHandle;
@@ -125,6 +137,7 @@ extern void StartCanTxTask(void *argument);
 extern void StartCanRxTask(void *argument);
 extern void StartCoolingTask(void *argument);
 extern void StartWatchDogTask(void *argument);
+extern void StartDebugLEDTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -157,6 +170,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of canTxPacketQueue */
   canTxPacketQueueHandle = osMessageQueueNew (32, sizeof(CAN_TxPacketTypeDef), &canTxPacketQueue_attributes);
 
+  /* creation of setCarStateQueue */
+  setCarStateQueueHandle = osMessageQueueNew (32, sizeof(uint8_t), &setCarStateQueue_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -182,6 +198,9 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of watchDogTask */
   watchDogTaskHandle = osThreadNew(StartWatchDogTask, (void*) WATCH_DOG_TASK_ENABLED, &watchDogTask_attributes);
+
+  /* creation of DebugLEDTask */
+  DebugLEDTaskHandle = osThreadNew(StartDebugLEDTask, (void*) LED_TASK_ENABLED, &DebugLEDTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -216,7 +235,7 @@ void StartDefaultTask(void *argument)
   for(;;)
   {
       kickWatchdogBit(osThreadGetId());
-    osDelay(1);
+      osThreadYield();
   }
   /* USER CODE END StartDefaultTask */
 }

@@ -8,9 +8,10 @@
 #include "vcu_comms_handler.h"
 #include "acb_startup.h"
 #include "can.h"
+#include "acu_debug_led.h"
 
-#define AIR_CLOSE_DELAY 1000
-#define AIR_OPEN_DELAY  1000
+#define AIR_CLOSE_DELAY 500
+#define AIR_OPEN_DELAY  500
 
 #define DISABLE_AIRS_CHECK 0
 #define DISABLE_PRECHARGE_CHECK 0
@@ -29,22 +30,20 @@ void resetAirCtrl() {
   * @brief Closes the airs, check feedback to confirm state
   * @retval 0 on success, 1 if pos air didn't close, 2 if neg air didnt close, 3 if both airs didn't close
   */
-uint8_t close_airs(){
-	uint8_t air_state = 0;
+air_status_t close_airs(){
+	air_status_t air_state = AIR_CLOSE_SUCCESS;
     setAirCtrl();
-#ifndef TESTAIRS
 	vTaskDelay(pdMS_TO_TICKS(AIR_CLOSE_DELAY));
-#endif
 
 	if(!DISABLE_AIRS_CHECK) {
 		if(HAL_GPIO_ReadPin(AIR_POS_FB_GPIO_Port, AIR_POS_FB_Pin) != 1){
 			//neg air did not close
-			air_state = air_state | 0x1;
+			air_state = air_state | AIR_POS_CLOSE_FAILURE;
             resetAirCtrl();
         }
 		if(HAL_GPIO_ReadPin(AIR_NEG_FB_GPIO_Port, AIR_NEG_FB_Pin) != 1){
 			//pos air did not close
-			air_state = air_state | 0x2;
+			air_state = air_state | AIR_NEG_CLOSE_FAILURE;
             resetAirCtrl();
 		}
 	}
@@ -81,25 +80,30 @@ uint8_t open_airs(){
  * @Brief: This function executes the pre charge routine. This function must be called
  * from within a task. This function will check to see if the
  */
-uint8_t startup_precharge(){
-	uint8_t precharge_success = 0;
+
+precharge_status_t startup_precharge(){
+	precharge_status_t precharge_success = PRECHARGE_FAILED;
+
 	HAL_GPIO_WritePin(AIR_NEG_CTRL_GPIO_Port, AIR_NEG_CTRL_Pin, GPIO_PIN_SET);
 	vTaskDelay(pdMS_TO_TICKS(AIR_CLOSE_DELAY));
-	if(!DISABLE_PRECHARGE_CHECK) {
+
+	if(!DISABLE_AIRS_CHECK) {
 		if(HAL_GPIO_ReadPin(AIR_NEG_FB_GPIO_Port, AIR_NEG_FB_Pin) != 1){
-            resetAirCtrl();
-			precharge_success = 0;
+			resetAirCtrl();
 			return precharge_success;
 		}
-        HAL_GPIO_WritePin(PRECHRG_CTRL_GPIO_Port, PRECHRG_CTRL_Pin, GPIO_PIN_SET);
-		vTaskDelay(pdMS_TO_TICKS(5000));
-	} else {
-        HAL_GPIO_WritePin(PRECHRG_CTRL_GPIO_Port, PRECHRG_CTRL_Pin, GPIO_PIN_SET);
 	}
 
-	if(isMCBusCharged() == BUS_CHARGED){
-		precharge_success = 1;
+	HAL_GPIO_WritePin(PRECHRG_CTRL_GPIO_Port, PRECHRG_CTRL_Pin, GPIO_PIN_SET);
+	setLEDState(PRECHARGE);
+	vTaskDelay(pdMS_TO_TICKS(5000));
+
+	if(isMCBusCharged() == BUS_CHARGED || DISABLE_PRECHARGE_CHECK){
+		HAL_GPIO_WritePin(AIR_POS_CTRL_GPIO_Port, AIR_POS_CTRL_Pin, GPIO_PIN_SET);
+		vTaskDelay(pdMS_TO_TICKS(AIR_CLOSE_DELAY));
+		precharge_success = PRECHARGE_SUCCESS;
 	}
+	HAL_GPIO_WritePin(PRECHRG_CTRL_GPIO_Port, PRECHRG_CTRL_Pin, GPIO_PIN_RESET);
 	return precharge_success;
 
 }

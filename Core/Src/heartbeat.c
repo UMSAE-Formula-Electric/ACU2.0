@@ -5,7 +5,7 @@
 #include "iwdg.h"
 
 #define HEARTBEAT_TASK_DELAY_MS     100
-#define HEARTBEAT_MAX_MISSES		50 //Max number of times we can miss a heartbeat notification
+#define HEARTBEAT_MAX_MISSES		10 //Max number of times we can miss a heartbeat notification
 
 static HeartbeatState_t vcu_connection_state = HEARTBEAT_NONE;
 
@@ -49,8 +49,7 @@ void StartVcuHrtBeatTask(void *argument){
                 vcu_connection_state = HEARTBEAT_LOST;
             }
 		}
-
-		osThreadYield();
+		vTaskDelay(pdMS_TO_TICKS(HEARTBEAT_TASK_DELAY_MS / 4));
 	}
 }
 

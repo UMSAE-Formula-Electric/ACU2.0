@@ -6,6 +6,7 @@
 #include "car_state.h"
 #include "acb_startup.h"
 #include "heartbeat.h"
+#include "can_utils.h"
 
 extern QueueHandle_t ACB_VCU_CAN_Queue;
 
@@ -24,39 +25,23 @@ void processVcuToAcuCanIdRxData(const uint8_t *RxData) {
 
 void processVcuSetAcuStateCanIdRxData(const uint8_t *RxData) {
     TaskHandle_t startupTask = NULL;
+    osStatus_t retOS;
+    enum DASH_BUTTON dashButtonPress;
 
     switch(RxData[0]){
         case TRACTIVE_SYSTEM_ACTIVE:
-            startupTask = get_startup_task();
-            if(startupTask != NULL){
-                xTaskNotify( startupTask, TSA_BUTTON_PRESS, eSetValueWithOverwrite);
-            }
-            else{
-                //handle error
-            }
-            //notify the task
+        	dashButtonPress = TSA_BUTTON_PRESS;
             break;
         case READY_TO_DRIVE:
-            startupTask = get_startup_task();
-            if(startupTask != NULL){
-                xTaskNotify( startupTask, RTD_BUTTON_PRESS, eSetValueWithOverwrite);
-            }
-            else{
-                //handle error
-            }
+        	dashButtonPress = RTD_BUTTON_PRESS;
             break;
         case IDLE:
-            startupTask = get_startup_task();
-            if(startupTask != NULL){
-                xTaskNotify( startupTask, KILL_SWITCH_PRESS, eSetValueWithOverwrite);
-            }
-            else{
-                //handle error
-            }
+        	dashButtonPress = KILL_SWITCH_PRESS;
             break;
         default:
             break;
     }
+    retOS = osMessageQueuePut(setCarStateQueueHandle, &dashButtonPress , 0, 0);
 }
 
 void process_VCU_CAN_packets(void *argument){
@@ -80,7 +65,7 @@ void process_VCU_CAN_packets(void *argument){
 }
 
 
-void send_VCU_mesg(enum ACB_TO_CAN_MSG msg){
+void send_VCU_mesg(enum STARTUP_STATUS_NOTIFY_MSG msg){
 	uint8_t data = (uint8_t)msg;
 	sendCan(&hcan1, &data, 1, CAN_ACU_TO_VCU_ID, CAN_RTR_DATA, CAN_NO_EXT);
 }

@@ -18,10 +18,10 @@ enum AIR_STATE {
 };
 
 //values for kill switches
-enum DASH_BUTTOM {
-	TSA_BUTTON_PRESS = 0,
-	RTD_BUTTON_PRESS,
-	KILL_SWITCH_PRESS
+enum DASH_BUTTON {
+	RTD_BUTTON_PRESS = 1,
+	KILL_SWITCH_PRESS = 2,
+	TSA_BUTTON_PRESS = 3,
 };
 
 #endif

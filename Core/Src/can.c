@@ -22,6 +22,7 @@
 
 /* USER CODE BEGIN 0 */
 #include "vcu_comms_handler.h"
+#include "motor_controller_can_utils.h"
 #include "logger.h"
 #include "iwdg.h"
 
@@ -146,20 +147,19 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
     CAN_RxPacketTypeDef rxPacket;
+    uint32_t currQueueSize = osMessageQueueGetCount(canRxPacketQueueHandle);
+    uint32_t maxQueueCapacity = osMessageQueueGetCapacity(canRxPacketQueueHandle);
+	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &(rxPacket.rxPacketHeader), rxPacket.rxPacketData) == HAL_OK) {
+		if((osMessageQueuePut(canRxPacketQueueHandle, &rxPacket, 0, 0) == osOK)) {
 
-    if (!(HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &(rxPacket.rxPacketHeader), rxPacket.rxPacketData) == HAL_OK &&
-          osMessageQueuePut(canRxPacketQueueHandle, &rxPacket, 0, 0) == osOK)) {
-        uint32_t currQueueSize = osMessageQueueGetCount(canRxPacketQueueHandle);
-        uint32_t maxQueueCapacity = osMessageQueueGetCapacity(canRxPacketQueueHandle);
-
-        if (currQueueSize == maxQueueCapacity) {  /* Queue is full */
-            logMessage("Error adding received message to the CAN Rx queue because the queue is full.\r\n", true);
-        }
-        else {  /* Error receiving message from CAN */
-            logMessage("Error receiving message from the CAN Bus and adding it to the Rx queue.\r\n", true);
-        }
-        Error_Handler();
-    }
+		} else if (currQueueSize == maxQueueCapacity) {  /* Queue is full */
+			logMessage("Error adding received message to the CAN Rx queue because the queue is full.\r\n", true);
+		}
+		else {  /* Error receiving message from CAN */
+			logMessage("Error receiving message from the CAN Bus and adding it to the Rx queue.\r\n", true);
+		}
+	}
+    osThreadYield();
 }
 
 void HAL_CAN_RxFifo0FullCallback(CAN_HandleTypeDef *hcan)
@@ -212,11 +212,15 @@ void StartCanRxTask(void *argument)
                     case CAN_VCU_SET_ACB_STATE_ID:
                         processVcuSetAcuStateCanIdRxData(rxPacket.rxPacketData);
                         break;
+                    case CAN_MC_RX_INTERNAL_VOLTAGES:
+                    	mc_process_internal_volt_can(rxPacket.rxPacketData);
+                    	break;
                     default:
                         break;
                 }
             }
         }
+        osThreadYield();
     }
 }
 
@@ -241,6 +245,7 @@ void StartCanTxTask(void *argument){
                 logMessage("ACU sent a message to the CAN Bus.\r\n", true);
             }
         }
+        osThreadYield();
     }
 }
 /* USER CODE END 1 */
