@@ -171,7 +171,7 @@ void MX_FREERTOS_Init(void) {
   canTxPacketQueueHandle = osMessageQueueNew (32, sizeof(CAN_TxPacketTypeDef), &canTxPacketQueue_attributes);
 
   /* creation of setCarStateQueue */
-  setCarStateQueueHandle = osMessageQueueNew (32, sizeof(uint16_t), &setCarStateQueue_attributes);
+  setCarStateQueueHandle = osMessageQueueNew (32, sizeof(uint8_t), &setCarStateQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */

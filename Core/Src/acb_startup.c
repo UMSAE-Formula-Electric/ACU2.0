@@ -73,7 +73,7 @@ void StartAcuStateTask(void *argument){
                 //wait for button press
                 retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
                 if(retRTOS == osOK){
-                	if(ulNotifiedValue == 32){
+                	if(ulNotifiedValue == TSA_BUTTON_PRESS){
                 		go_tsa();
                 	}
                 }
@@ -87,7 +87,7 @@ void StartAcuStateTask(void *argument){
 
                 retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
                 if(retRTOS == osOK){
-                    if(ulNotifiedValue == 0){
+                    if(ulNotifiedValue == RTD_BUTTON_PRESS){
                          go_rtd();
                     }
                     else if(ulNotifiedValue == KILL_SWITCH_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){

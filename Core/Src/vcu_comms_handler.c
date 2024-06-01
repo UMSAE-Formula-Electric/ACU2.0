@@ -26,20 +26,22 @@ void processVcuToAcuCanIdRxData(const uint8_t *RxData) {
 void processVcuSetAcuStateCanIdRxData(const uint8_t *RxData) {
     TaskHandle_t startupTask = NULL;
     osStatus_t retOS;
+    enum DASH_BUTTON dashButtonPress;
 
     switch(RxData[0]){
         case TRACTIVE_SYSTEM_ACTIVE:
-            retOS = osMessageQueuePut(setCarStateQueueHandle, (uint8_t) TSA_BUTTON_PRESS, 0, 0);
+        	dashButtonPress = TSA_BUTTON_PRESS;
             break;
         case READY_TO_DRIVE:
-            osMessageQueuePut(setCarStateQueueHandle, RTD_BUTTON_PRESS, 0, 0);
+        	dashButtonPress = RTD_BUTTON_PRESS;
             break;
         case IDLE:
-            osMessageQueuePut(setCarStateQueueHandle, KILL_SWITCH_PRESS, 0, 0);
+        	dashButtonPress = KILL_SWITCH_PRESS;
             break;
         default:
             break;
     }
+    retOS = osMessageQueuePut(setCarStateQueueHandle, &dashButtonPress , 0, 0);
 }
 
 void process_VCU_CAN_packets(void *argument){
