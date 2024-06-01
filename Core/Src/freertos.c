@@ -97,6 +97,13 @@ const osThreadAttr_t watchDogTask_attributes = {
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for DebugLEDTask */
+osThreadId_t DebugLEDTaskHandle;
+const osThreadAttr_t DebugLEDTask_attributes = {
+  .name = "DebugLEDTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* Definitions for canRxPacketQueue */
 osMessageQueueId_t canRxPacketQueueHandle;
 const osMessageQueueAttr_t canRxPacketQueue_attributes = {
@@ -130,6 +137,7 @@ extern void StartCanTxTask(void *argument);
 extern void StartCanRxTask(void *argument);
 extern void StartCoolingTask(void *argument);
 extern void StartWatchDogTask(void *argument);
+extern void StartDebugLEDTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -163,7 +171,7 @@ void MX_FREERTOS_Init(void) {
   canTxPacketQueueHandle = osMessageQueueNew (32, sizeof(CAN_TxPacketTypeDef), &canTxPacketQueue_attributes);
 
   /* creation of setCarStateQueue */
-  setCarStateQueueHandle = osMessageQueueNew (5, sizeof(uint8_t), &setCarStateQueue_attributes);
+  setCarStateQueueHandle = osMessageQueueNew (32, sizeof(uint16_t), &setCarStateQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -190,6 +198,9 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of watchDogTask */
   watchDogTaskHandle = osThreadNew(StartWatchDogTask, (void*) WATCH_DOG_TASK_ENABLED, &watchDogTask_attributes);
+
+  /* creation of DebugLEDTask */
+  DebugLEDTaskHandle = osThreadNew(StartDebugLEDTask, (void*) LED_TASK_ENABLED, &DebugLEDTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */

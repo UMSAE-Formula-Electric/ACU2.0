@@ -66,6 +66,7 @@ void Error_Handler(void);
 #define CAN_RX_TASK_ENABLED 1
 #define DEFAULT_TASK_ENABLED 0
 #define WATCH_DOG_TASK_ENABLED 1
+#define LED_TASK_ENABLED 1
 #define COOL_SYS_TEMP3_Pin GPIO_PIN_0
 #define COOL_SYS_TEMP3_GPIO_Port GPIOC
 #define VBATT_Pin GPIO_PIN_2
@@ -116,10 +117,10 @@ void Error_Handler(void);
 #define PRECHRG_CTRL_GPIO_Port GPIOD
 #define ACU_LED1_BLUE_Pin GPIO_PIN_14
 #define ACU_LED1_BLUE_GPIO_Port GPIOD
-#define ACU_LED1_RED_Pin GPIO_PIN_6
-#define ACU_LED1_RED_GPIO_Port GPIOC
 #define ACU_LED1_GREEN_Pin GPIO_PIN_15
 #define ACU_LED1_GREEN_GPIO_Port GPIOD
+#define ACU_LED1_RED_Pin GPIO_PIN_6
+#define ACU_LED1_RED_GPIO_Port GPIOC
 #define BUZR_CTRL_Pin GPIO_PIN_11
 #define BUZR_CTRL_GPIO_Port GPIOA
 #define BRAKE_PRESS_Pin GPIO_PIN_3
@@ -128,10 +129,10 @@ void Error_Handler(void);
 #define IMD_RESIST_GPIO_Port GPIOB
 #define ACU_LED2_BLUE_Pin GPIO_PIN_8
 #define ACU_LED2_BLUE_GPIO_Port GPIOB
-#define ACU_LED2_RED_Pin GPIO_PIN_0
-#define ACU_LED2_RED_GPIO_Port GPIOE
 #define ACU_LED2_GREEN_Pin GPIO_PIN_9
 #define ACU_LED2_GREEN_GPIO_Port GPIOB
+#define ACU_LED2_RED_Pin GPIO_PIN_0
+#define ACU_LED2_RED_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
 

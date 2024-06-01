@@ -102,6 +102,8 @@ float cooling_mc_air_temp_to_c(uint32_t temperature){
     return temp_in_c;
 }
 
+int coolingEnabled = 0;
+int coolingEnabledPrev = 0;
 
 /**
   * @brief  Monitor temperatures and turn pump and rad fans on accordingly
@@ -132,6 +134,10 @@ void StartCoolingTask(void *argument){
     		//cooling_disable_rad_fans();
     	}
 
+    	if(coolingEnabled && !coolingEnabledPrev) {
+    		enableCoolingGently();
+    	}
+
         //read temps and convert to eng units
         //mc_igbt_temp = cooling_igbt_temp_to_c( MC_getIGBTTemp() );
         //mc_air_temp = cooling_mc_air_temp_to_c( MC_getAirTemp() );
@@ -156,10 +162,10 @@ void StartCoolingTask(void *argument){
       else{
         //not rtd let it cool to ambient
         cooling_disable_pump();
-        vTaskDelay(pdMS_TO_TICKS(3000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
         cooling_disable_rad_fans();
       }
-      vTaskDelay(10000);
+      vTaskDelay(pdMS_TO_TICKS(1000));
       osThreadYield();
     }
 
@@ -167,7 +173,7 @@ void StartCoolingTask(void *argument){
 
 void enableCoolingGently() {
 	cooling_enable_pump();
-	vTaskDelay(pdMS_TO_TICKS(2000));
+	vTaskDelay(pdMS_TO_TICKS(1000));
 	cooling_enable_rad_fans();
 }
 

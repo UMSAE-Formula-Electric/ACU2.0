@@ -8,6 +8,7 @@
 #include "vcu_comms_handler.h"
 #include "acb_startup.h"
 #include "can.h"
+#include "acu_debug_led.h"
 
 #define AIR_CLOSE_DELAY 500
 #define AIR_OPEN_DELAY  500
@@ -94,7 +95,7 @@ precharge_status_t startup_precharge(){
 	}
 
 	HAL_GPIO_WritePin(PRECHRG_CTRL_GPIO_Port, PRECHRG_CTRL_Pin, GPIO_PIN_SET);
-	led_set_1_white();
+	setLEDState(PRECHARGE);
 	vTaskDelay(pdMS_TO_TICKS(5000));
 
 	if(isMCBusCharged() == BUS_CHARGED || DISABLE_PRECHARGE_CHECK){

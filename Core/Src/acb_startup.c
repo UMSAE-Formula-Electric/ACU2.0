@@ -10,6 +10,8 @@
 #include "acb_startup.h"
 #include "gpio.h"
 
+#include "acu_debug_led.h"
+
 #include "error_handler.h"
 
 #include "air.h"
@@ -24,9 +26,9 @@
 
 #define HOON_MODE 0
 
-#define DISABLE_SAFETY_LOOP_CHECK 0
+#define DISABLE_SAFETY_LOOP_CHECK 1
 #define DISABLE_MC_HEARTBEAT_CHECK 1
-#define DISABLE_AIRS_CHECK 0
+#define DISABLE_AIRS_CHECK 1
 #define DISABLE_PRECHARGE_CHECK 1
 #define DISABLE_TSA_CHECKS 0
 
@@ -63,28 +65,11 @@ void StartAcuStateTask(void *argument){
 
 	for(;;){
         kickWatchdogBit(osThreadGetId());
-        led_clear_all_leds();
-        if(get_heartbeat_state() != HEARTBEAT_PRESENT) {
-        	vTaskDelay(100);
-        	led_clear_all_leds();
-        	led_set_2_blue();
-        	go_idle();
-        	vTaskDelay(100);
-        	led_clear_all_leds();
-        }
-
-        if(checkSafetyLoop() != SAFETY_LOOP_CLOSED) {
-        	led_clear_all_leds();
-        	led_set_2_red();
-        	go_idle();
-        	vTaskDelay(50);
-        	led_clear_all_leds();
-        }
 
         state = get_car_state();
         switch(state){
             case IDLE:
-            	led_set_1_red();
+            	setLEDState(IDLE_LED);
                 //wait for button press
                 retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
                 if(retRTOS == osOK){
@@ -98,8 +83,7 @@ void StartAcuStateTask(void *argument){
 
                 break;
             case TRACTIVE_SYSTEM_ACTIVE:
-                led_set_1_green();
-                led_set_2_red();
+                setLEDState(TSA);
 
                 retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
                 if(retRTOS == osOK){
@@ -107,17 +91,18 @@ void StartAcuStateTask(void *argument){
                          go_rtd();
                     }
                     else if(ulNotifiedValue == KILL_SWITCH_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
+                    	setLEDState(VCU_IDLE_REQUEST);
                         go_idle();
                     }
                 }
                 break;
             case READY_TO_DRIVE:
-                led_set_1_green();
-                led_set_2_green();
+            	setLEDState(RTD);
 
                 retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
                 if (retRTOS == osOK){
                     if(ulNotifiedValue == KILL_SWITCH_PRESS){
+                    	setLEDState(VCU_IDLE_REQUEST);
                         go_idle();
                     }
                     else{
@@ -128,7 +113,16 @@ void StartAcuStateTask(void *argument){
             default:
                 break;
         }
-        vTaskDelay(100);
+        if(get_heartbeat_state() != HEARTBEAT_PRESENT) {
+        	go_idle();
+        	setLEDState(NO_VCU_HEARTBEAT);
+        }
+
+        if(checkSafetyLoop() != SAFETY_LOOP_CLOSED) {
+        	go_idle();
+        	setLEDState(SAFETY_LOOP_OPEN_LED);
+        }
+        vTaskDelay(pdMS_TO_TICKS(25));
 	}
 	vTaskDelete( NULL );
 }
@@ -160,7 +154,7 @@ void go_idle(){
 
 //function to close airs, power mc
 void go_tsa(){
-	led_set_1_blue();
+	setLEDState(TSA_REQUEST);
 	send_VCU_mesg(CAN_ACB_TSA_ACK);
 	//Tractive System Active Procedure
 	if(check_safety_loop() == SAFETY_LOOP_CLOSED || DISABLE_SAFETY_LOOP_CHECK){  //check if safety loop is closed is Pressed
@@ -170,12 +164,14 @@ void go_tsa(){
 					send_VCU_mesg(CAN_ACB_TSA_ACK);
 				} else{
 					log_and_handle_error(ERROR_AIR_FAIL_TO_CLOSE, &air_close_fail_handler);
+					setLEDState(FAIL);
 					go_idle();
 				}
 			}
 		}
 		else{
 			log_and_handle_error(ERROR_PRECHAGE_FAIL, &go_idle);
+			setLEDState(FAIL);
 		}
 		open_precharge();
 
@@ -207,11 +203,12 @@ loop_status_t checkSafetyLoop() {
  * it work off the IGBT temperatures.
  */
 void go_rtd(){
-	led_set_2_blue();
+	setLEDState(RTD_REQUEST);
+	setLEDState(BUZZER);
 	sound_buzzer();
-	set_car_state(READY_TO_DRIVE);
-	led_set_2_purple();
+	setLEDState(ENABLE_COOLING);
 	enableCoolingGently();
+	set_car_state(READY_TO_DRIVE);
 	send_VCU_mesg(CAN_ACB_RTD_ACK);
 }
 
