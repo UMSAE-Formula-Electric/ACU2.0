@@ -28,6 +28,7 @@
 
 #define DISABLE_SAFETY_LOOP_CHECK 0
 #define DISABLE_MC_HEARTBEAT_CHECK 0
+#define DISABLE_HEARTBEAT_CHECK 0
 #define DISABLE_AIRS_CHECK 0
 #define DISABLE_PRECHARGE_CHECK 0
 #define DISABLE_TSA_CHECKS 0
@@ -113,7 +114,7 @@ void StartAcuStateTask(void *argument){
             default:
                 break;
         }
-        if(get_heartbeat_state() != HEARTBEAT_PRESENT) {
+        if(get_heartbeat_state() != HEARTBEAT_PRESENT && !DISABLE_HEARTBEAT_CHECK) {
         	go_idle();
         	setLEDState(NO_VCU_HEARTBEAT);
         }
@@ -171,6 +172,7 @@ void go_tsa(){
 		}
 		else{
 			log_and_handle_error(ERROR_PRECHAGE_FAIL, &go_idle);
+			go_idle();
 			setLEDState(FAIL);
 		}
 		open_precharge();
