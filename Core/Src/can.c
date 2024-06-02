@@ -215,6 +215,9 @@ void StartCanRxTask(void *argument)
                     case CAN_MC_RX_INTERNAL_VOLTAGES:
                     	mc_process_internal_volt_can(rxPacket.rxPacketData);
                     	break;
+                    case CAN_MC_RX_VOLT_ID:
+						mc_process_volt_can(rxPacket.rxPacketData);
+                    	break;
                     default:
                         break;
                 }
