@@ -57,6 +57,7 @@ typedef enum {
     CAN_RX_TASK,
     COOLING_TASK,
     WATCH_DOG_TASK,
+    BMS_CAN_COMM_TASK,
     NUM_TASKS
 } TaskBit_t;
 
