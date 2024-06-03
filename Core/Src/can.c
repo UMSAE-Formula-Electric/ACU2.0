@@ -215,51 +215,6 @@ void StartCanRxTask(void *argument)
                 {
                     processVcuSetAcuStateCanIdRxData(rxPacket.rxPacketData);
                 }
-                else if (canID == CAN_BMS_OVERALL_ID)
-                {
-                    process_bms_overall_packet(rxPacket.rxPacketData);
-                    //notify_heartbeat_task_bms(); // dead function in old code?
-                }
-                else if (canID == CAN_BMS_DIAGNOSTIC_ID)
-                {
-                    process_bms_diagnostic_packet(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_BMS_VOLTAGE_ID)
-                {
-                    process_bms_voltage_packet(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_BMS_MODULE_TEMPERATURE)
-                {
-                    process_bms_module_temp_can(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_BMS_CELL_TEMPERATURE)
-                {
-                    process_bms_temp_packet(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_BMS_CELL_BALANCING_RATE)
-                {
-                    process_bms_cell_temp_balancing_rate_can(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_BMS_STATE_OF_CHARGE)
-                {
-                    process_bms_state_of_charge_can(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_BMS_CONTACTOR_CONTROL)
-                {
-                    process_bms_contactor_control_can(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_BMS_ENERGY_PARAM)
-                {
-                    process_bms_energy_param_can(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_BMS_STATS)
-                {
-                    process_bms_stats_can(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_BMS_EVENTS)
-                {
-                    process_bms_events_can(rxPacket.rxPacketData);
-                }
                 else if (canID == CAN_MC_RX_INTERNAL_VOLTAGES)
                 {
                     mc_process_internal_volt_can(rxPacket.rxPacketData);
@@ -268,11 +223,9 @@ void StartCanRxTask(void *argument)
                 {
                     mc_process_volt_can(rxPacket.rxPacketData);
                 }
-                else
+                else if (isBmsCanId(canID))
                 {
-                    // Should typeA and typeB function call go here? -> it contains all the if statements
-                    // and could remove the function and only have the if that's less confusing
-                    process_typeA_and_typeB_can_packets(&rxPacket);
+                    osMessageQueuePut(bmsRxCanMsgQueueHandle, &rxPacket, 0, 0);
                 }
             }
         }
