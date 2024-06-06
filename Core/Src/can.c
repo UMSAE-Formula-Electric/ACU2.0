@@ -207,22 +207,7 @@ void StartCanRxTask(void *argument)
             if (rxPacket.rxPacketHeader.IDE == CAN_ID_STD)
             {
                 canID = rxPacket.rxPacketHeader.StdId;
-                if (canID == CAN_VCU_TO_ACU_ID)
-                {
-                    processVcuToAcuCanIdRxData(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_VCU_SET_ACB_STATE_ID)
-                {
-                    processVcuSetAcuStateCanIdRxData(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_MC_RX_INTERNAL_VOLTAGES)
-                {
-                    mc_process_internal_volt_can(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_MC_RX_VOLT_ID)
-                {
-                    mc_process_volt_can(rxPacket.rxPacketData);
-                }
+                if (isVcuCanId(canID)) { osMessageQueuePut(vcuCanCommsQueueHandle, &rxPacket, 0, 0); }
                 else if (isBmsCanId(canID))
                 {
                     osMessageQueuePut(bmsRxCanMsgQueueHandle, &rxPacket, 0, 0);

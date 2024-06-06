@@ -15,5 +15,6 @@ void send_precharge_pass();
 void send_precharge_fail();
 void send_air_fail();
 void send_VCU_mesg(enum STARTUP_STATUS_NOTIFY_MSG msg);
+_Bool isVcuCanId(uint16_t canId);
 
 #endif

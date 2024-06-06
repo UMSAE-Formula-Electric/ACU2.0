@@ -6,13 +6,17 @@
 #include "car_state.h"
 #include "acb_startup.h"
 #include "heartbeat.h"
-#include "can_utils.h"
 #include "iwdg.h"
+#include "motor_controller_can_utils.h"
 
 #define VCU_COMMS_TASK_DELAY_MS 20
-extern QueueHandle_t ACB_VCU_CAN_Queue;
 
 void notify_heartbeat_task(HeartbeatNotify_t notify_val);
+
+_Bool isVcuCanId(uint16_t canId){
+    return (canId == CAN_VCU_TO_ACU_ID || canId == CAN_VCU_SET_ACB_STATE_ID
+        || canId == CAN_MC_RX_INTERNAL_VOLTAGES || canId == CAN_MC_RX_VOLT_ID);
+}
 
 void processVcuToAcuCanIdRxData(const uint8_t *RxData) {
     switch(RxData[0]){
@@ -26,10 +30,7 @@ void processVcuToAcuCanIdRxData(const uint8_t *RxData) {
 }
 
 void processVcuSetAcuStateCanIdRxData(const uint8_t *RxData) {
-    TaskHandle_t startupTask = NULL;
-    osStatus_t retOS;
     enum DASH_BUTTON dashButtonPress;
-
     switch(RxData[0]){
         case TRACTIVE_SYSTEM_ACTIVE:
         	dashButtonPress = TSA_BUTTON_PRESS;
@@ -43,29 +44,8 @@ void processVcuSetAcuStateCanIdRxData(const uint8_t *RxData) {
         default:
             break;
     }
-    retOS = osMessageQueuePut(setCarStateQueueHandle, &dashButtonPress , 0, 0);
+    osMessageQueuePut(setCarStateQueueHandle, &dashButtonPress , 0, 0);
 }
-
-void process_VCU_CAN_packets(void *argument){
-    CAN_RxHeaderTypeDef packetToProcess;
-    uint8_t RxData[8];
-    BaseType_t ret;
-
-	for(;;){
-
-		ret = xQueueReceive(ACB_VCU_CAN_Queue,&packetToProcess, portMAX_DELAY);
-		if(ret == pdPASS){
-			if(packetToProcess.StdId ==  CAN_VCU_SET_ACB_STATE_ID){
-                processVcuSetAcuStateCanIdRxData(RxData);
-            }
-            else if(packetToProcess.StdId == CAN_ACU_CAN_ID){
-                processVcuToAcuCanIdRxData(RxData);
-            }
-		}
-	}
-	vTaskDelete(NULL);
-}
-
 
 void send_VCU_mesg(enum STARTUP_STATUS_NOTIFY_MSG msg){
 	uint8_t data = (uint8_t)msg;
@@ -86,8 +66,36 @@ void StartVcuCanCommsTask(void *argument){
         osThreadExit();
     }
 
+    CAN_RxPacketTypeDef rxPacket;
+    osStatus_t isMsgTakenFromQueue;
+    uint32_t canID;
+
     for(;;){
         kickWatchdogBit(osThreadGetId());
+
+        isMsgTakenFromQueue = osMessageQueueGet(vcuCanCommsQueueHandle, &rxPacket, 0, 0);
+        if (isMsgTakenFromQueue == osOK) {
+            if (rxPacket.rxPacketHeader.IDE == CAN_ID_STD)
+            {
+                canID = rxPacket.rxPacketHeader.StdId;
+                if (canID == CAN_VCU_TO_ACU_ID)
+                {
+                    processVcuToAcuCanIdRxData(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_VCU_SET_ACB_STATE_ID)
+                {
+                    processVcuSetAcuStateCanIdRxData(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_MC_RX_INTERNAL_VOLTAGES)
+                {
+                    mc_process_internal_volt_can(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_MC_RX_VOLT_ID)
+                {
+                    mc_process_volt_can(rxPacket.rxPacketData);
+                }
+                }
+        }
 
         osDelay(pdMS_TO_TICKS(VCU_COMMS_TASK_DELAY_MS));
     }
