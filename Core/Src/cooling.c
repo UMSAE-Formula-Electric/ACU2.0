@@ -112,7 +112,7 @@ int coolingEnabledPrev = 0;
 void StartCoolingTask(void *argument){
     uint8_t isTaskActivated = (int)argument;
     if (isTaskActivated == 0) {
-        osThreadTerminate(osThreadGetId());
+        osThreadExit();
     }
 
 	float mc_igbt_temp = 0.0; //degrees c

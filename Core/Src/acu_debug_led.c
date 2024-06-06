@@ -12,7 +12,7 @@ int blockerLoopCount = 0;
 void StartDebugLEDTask(void* argument)	{
 	uint8_t isTaskActivated = (int)argument;
 	if (isTaskActivated == 0) {
-		osThreadTerminate(osThreadGetId());
+		osThreadExit();
 	}
 
 	for(;;) {
