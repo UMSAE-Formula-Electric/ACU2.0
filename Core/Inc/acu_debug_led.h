@@ -41,5 +41,7 @@ enum LED_STATE {
 	VCU_IDLE_REQUEST
 };
 
+void setLEDState(enum LED_STATE newState);
+
 
 #endif

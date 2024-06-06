@@ -2,8 +2,7 @@
 #include "stm32f4xx.h"
 #include "gpio.h"
 #include "FreeRTOS.h"
-
-#include "acu_debug_led.h"
+#include "cmsis_os2.h"
 
 
 volatile enum LED_STATE state;
@@ -53,28 +52,28 @@ void StartDebugLEDTask(void* argument)	{
 			for(int i = 0; i < FAIL_COUNT; i++) {
 				led_set_1_red();
 				led_set_2_red();
-				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+				osDelay(pdMS_TO_TICKS(FAIL_TIME));
 				led_set_1_white();
 				led_set_2_white();
-				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+				osDelay(pdMS_TO_TICKS(FAIL_TIME));
 				blockerLoopCount--;
 			}
 			break;
 		case SAFETY_LOOP_OPEN_LED:
         	led_clear_all_leds();
         	led_set_1_red();
-        	vTaskDelay(pdMS_TO_TICKS(SAFETY_LOOP_OSC_TIME + TASK_DELAY));
+        	osDelay(pdMS_TO_TICKS(SAFETY_LOOP_OSC_TIME + TASK_DELAY));
         	led_clear_all_leds();
         	led_set_2_red();
-        	vTaskDelay(pdMS_TO_TICKS(SAFETY_LOOP_OSC_TIME));
+        	osDelay(pdMS_TO_TICKS(SAFETY_LOOP_OSC_TIME));
         	led_clear_all_leds();
 			break;
 		case NO_VCU_HEARTBEAT:
 			led_set_1_red();
-			vTaskDelay(pdMS_TO_TICKS(NO_HEARTBEAT_TIME + TASK_DELAY));
+			osDelay(pdMS_TO_TICKS(NO_HEARTBEAT_TIME + TASK_DELAY));
         	led_clear_all_leds();
         	led_set_2_blue();
-        	vTaskDelay(pdMS_TO_TICKS(NO_HEARTBEAT_TIME));
+        	osDelay(pdMS_TO_TICKS(NO_HEARTBEAT_TIME));
         	led_clear_all_leds();
 			break;
 		case NO_MC_HEARTBEAT:
@@ -83,14 +82,14 @@ void StartDebugLEDTask(void* argument)	{
 			for(int i = 0; i < FAIL_COUNT; i++) {
 				led_set_1_red();
 				led_set_2_white();
-				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+				osDelay(pdMS_TO_TICKS(FAIL_TIME));
 				led_set_1_white();
 				led_set_2_red();
-				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+				osDelay(pdMS_TO_TICKS(FAIL_TIME));
 			}
 			break;
 		}
-		vTaskDelay(pdMS_TO_TICKS(50));
+		osDelay(pdMS_TO_TICKS(50));
 	}
 }
 
