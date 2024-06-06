@@ -18,6 +18,7 @@ extern osThreadId_t canRxTaskHandle;
 extern osThreadId_t coolingTaskHandle;
 extern osThreadId_t watchDogTaskHandle;
 extern osThreadId_t bmsCanCommTaskHandle;
+extern osThreadId_t vcuCanCommsTaskHandle;
 
 extern const osThreadAttr_t defaultTask_attributes;
 extern const osThreadAttr_t acuStateTask_attributes;
@@ -27,5 +28,6 @@ extern const osThreadAttr_t canRxTask_attributes;
 extern const osThreadAttr_t coolingTask_attributes;
 extern const osThreadAttr_t watchDogTask_attributes;
 extern const osThreadAttr_t bmsCanCommTask_attributes;
+extern const osThreadAttr_t vcuCanCommsTask_attributes;
 
 #endif /* INC_FREERTOS_TASK_HANDLES_H_ */

@@ -7,7 +7,9 @@
 #include "acb_startup.h"
 #include "heartbeat.h"
 #include "can_utils.h"
+#include "iwdg.h"
 
+#define VCU_COMMS_TASK_DELAY_MS 20
 extern QueueHandle_t ACB_VCU_CAN_Queue;
 
 void notify_heartbeat_task(HeartbeatNotify_t notify_val);
@@ -78,4 +80,15 @@ void notify_heartbeat_task(HeartbeatNotify_t notify_val){
 	}
 }
 
+void StartVcuCanCommsTask(void *argument){
+    uint8_t isTaskActivated = (int)argument;
+    if (isTaskActivated == 0) {
+        osThreadExit();
+    }
 
+    for(;;){
+        kickWatchdogBit(osThreadGetId());
+
+        osDelay(pdMS_TO_TICKS(VCU_COMMS_TASK_DELAY_MS));
+    }
+}

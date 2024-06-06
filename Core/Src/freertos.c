@@ -111,6 +111,13 @@ const osThreadAttr_t bmsCanCommTask_attributes = {
   .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for vcuCanCommsTask */
+osThreadId_t vcuCanCommsTaskHandle;
+const osThreadAttr_t vcuCanCommsTask_attributes = {
+  .name = "vcuCanCommsTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* Definitions for canRxPacketQueue */
 osMessageQueueId_t canRxPacketQueueHandle;
 const osMessageQueueAttr_t canRxPacketQueue_attributes = {
@@ -130,6 +137,11 @@ const osMessageQueueAttr_t setCarStateQueue_attributes = {
 osMessageQueueId_t bmsRxCanMsgQueueHandle;
 const osMessageQueueAttr_t bmsRxCanMsgQueue_attributes = {
   .name = "bmsRxCanMsgQueue"
+};
+/* Definitions for vcuCanCommsQueue */
+osMessageQueueId_t vcuCanCommsQueueHandle;
+const osMessageQueueAttr_t vcuCanCommsQueue_attributes = {
+  .name = "vcuCanCommsQueue"
 };
 /* Definitions for iwdgEventGroup */
 osEventFlagsId_t iwdgEventGroupHandle;
@@ -151,6 +163,7 @@ extern void StartCoolingTask(void *argument);
 extern void StartWatchDogTask(void *argument);
 extern void StartDebugLEDTask(void *argument);
 extern void StartBmsCanCommTask(void *argument);
+extern void StartVcuCanCommsTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -189,6 +202,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of bmsRxCanMsgQueue */
   bmsRxCanMsgQueueHandle = osMessageQueueNew (16, sizeof(CAN_RxPacketTypeDef), &bmsRxCanMsgQueue_attributes);
 
+  /* creation of vcuCanCommsQueue */
+  vcuCanCommsQueueHandle = osMessageQueueNew (16, sizeof(CAN_RxPacketTypeDef), &vcuCanCommsQueue_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -220,6 +236,9 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of bmsCanCommTask */
   bmsCanCommTaskHandle = osThreadNew(StartBmsCanCommTask, (void*) BMS_CAN_COMM_TASK_ENABLED, &bmsCanCommTask_attributes);
+
+  /* creation of vcuCanCommsTask */
+  vcuCanCommsTaskHandle = osThreadNew(StartVcuCanCommsTask, (void*) VCU_CAN_COMMS_TASK_ENABLED, &vcuCanCommsTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
