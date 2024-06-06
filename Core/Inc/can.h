@@ -47,7 +47,7 @@ extern "C" {
 extern CAN_HandleTypeDef hcan1;
 
 /* USER CODE BEGIN Private defines */
-
+extern osMessageQueueId_t bmsRxCanMsgQueueHandle;
 /* USER CODE END Private defines */
 
 void MX_CAN1_Init(void);

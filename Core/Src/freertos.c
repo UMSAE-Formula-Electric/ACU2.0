@@ -104,6 +104,13 @@ const osThreadAttr_t DebugLEDTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for bmsCanCommTask */
+osThreadId_t bmsCanCommTaskHandle;
+const osThreadAttr_t bmsCanCommTask_attributes = {
+  .name = "bmsCanCommTask",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* Definitions for canRxPacketQueue */
 osMessageQueueId_t canRxPacketQueueHandle;
 const osMessageQueueAttr_t canRxPacketQueue_attributes = {
@@ -118,6 +125,11 @@ const osMessageQueueAttr_t canTxPacketQueue_attributes = {
 osMessageQueueId_t setCarStateQueueHandle;
 const osMessageQueueAttr_t setCarStateQueue_attributes = {
   .name = "setCarStateQueue"
+};
+/* Definitions for bmsRxCanMsgQueue */
+osMessageQueueId_t bmsRxCanMsgQueueHandle;
+const osMessageQueueAttr_t bmsRxCanMsgQueue_attributes = {
+  .name = "bmsRxCanMsgQueue"
 };
 /* Definitions for iwdgEventGroup */
 osEventFlagsId_t iwdgEventGroupHandle;
@@ -138,6 +150,7 @@ extern void StartCanRxTask(void *argument);
 extern void StartCoolingTask(void *argument);
 extern void StartWatchDogTask(void *argument);
 extern void StartDebugLEDTask(void *argument);
+extern void StartBmsCanCommTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -173,6 +186,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of setCarStateQueue */
   setCarStateQueueHandle = osMessageQueueNew (32, sizeof(uint8_t), &setCarStateQueue_attributes);
 
+  /* creation of bmsRxCanMsgQueue */
+  bmsRxCanMsgQueueHandle = osMessageQueueNew (16, sizeof(CAN_RxPacketTypeDef), &bmsRxCanMsgQueue_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -201,6 +217,9 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of DebugLEDTask */
   DebugLEDTaskHandle = osThreadNew(StartDebugLEDTask, (void*) LED_TASK_ENABLED, &DebugLEDTask_attributes);
+
+  /* creation of bmsCanCommTask */
+  bmsCanCommTaskHandle = osThreadNew(StartBmsCanCommTask, (void*) BMS_CAN_COMM_TASK_ENABLED, &bmsCanCommTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */

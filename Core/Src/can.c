@@ -21,6 +21,7 @@
 #include "can.h"
 
 /* USER CODE BEGIN 0 */
+#include "bms_can_utils.h"
 #include "vcu_comms_handler.h"
 #include "motor_controller_can_utils.h"
 #include "logger.h"
@@ -147,19 +148,19 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
     CAN_RxPacketTypeDef rxPacket;
-    uint32_t currQueueSize = osMessageQueueGetCount(canRxPacketQueueHandle);
-    uint32_t maxQueueCapacity = osMessageQueueGetCapacity(canRxPacketQueueHandle);
-	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &(rxPacket.rxPacketHeader), rxPacket.rxPacketData) == HAL_OK) {
-		if((osMessageQueuePut(canRxPacketQueueHandle, &rxPacket, 0, 0) == osOK)) {
 
-		} else if (currQueueSize == maxQueueCapacity) {  /* Queue is full */
-			logMessage("Error adding received message to the CAN Rx queue because the queue is full.\r\n", true);
-		}
-		else {  /* Error receiving message from CAN */
-			logMessage("Error receiving message from the CAN Bus and adding it to the Rx queue.\r\n", true);
-		}
-	}
-    osThreadYield();
+    if (!(HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &(rxPacket.rxPacketHeader), rxPacket.rxPacketData) == HAL_OK &&
+          osMessageQueuePut(canRxPacketQueueHandle, &rxPacket, 0, 0) == osOK)) {
+        uint32_t currQueueSize = osMessageQueueGetCount(canRxPacketQueueHandle);
+        uint32_t maxQueueCapacity = osMessageQueueGetCapacity(canRxPacketQueueHandle);
+
+        if (currQueueSize == maxQueueCapacity) {  /* Queue is full */
+            logMessage("Error adding received message to the CAN Rx queue because the queue is full.\r\n", true);
+        }
+        else {  /* Error receiving message from CAN */
+            logMessage("Error receiving message from the CAN Bus and adding it to the Rx queue.\r\n", true);
+        }
+    }
 }
 
 void HAL_CAN_RxFifo0FullCallback(CAN_HandleTypeDef *hcan)
@@ -189,6 +190,7 @@ void StartCanRxTask(void *argument)
 
     CAN_RxPacketTypeDef rxPacket;
     osStatus_t isMsgTakenFromQueue;
+    uint32_t canID;
 
     for (;;)
     {
@@ -204,22 +206,26 @@ void StartCanRxTask(void *argument)
             }
             if (rxPacket.rxPacketHeader.IDE == CAN_ID_STD)
             {
-                switch (rxPacket.rxPacketHeader.StdId)
+                canID = rxPacket.rxPacketHeader.StdId;
+                if (canID == CAN_VCU_TO_ACU_ID)
                 {
-                    case CAN_VCU_TO_ACU_ID:
-                        processVcuToAcuCanIdRxData(rxPacket.rxPacketData);
-                        break;
-                    case CAN_VCU_SET_ACB_STATE_ID:
-                        processVcuSetAcuStateCanIdRxData(rxPacket.rxPacketData);
-                        break;
-                    case CAN_MC_RX_INTERNAL_VOLTAGES:
-                    	mc_process_internal_volt_can(rxPacket.rxPacketData);
-                    	break;
-                    case CAN_MC_RX_VOLT_ID:
-						mc_process_volt_can(rxPacket.rxPacketData);
-                    	break;
-                    default:
-                        break;
+                    processVcuToAcuCanIdRxData(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_VCU_SET_ACB_STATE_ID)
+                {
+                    processVcuSetAcuStateCanIdRxData(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_MC_RX_INTERNAL_VOLTAGES)
+                {
+                    mc_process_internal_volt_can(rxPacket.rxPacketData);
+                }
+                else if (canID == CAN_MC_RX_VOLT_ID)
+                {
+                    mc_process_volt_can(rxPacket.rxPacketData);
+                }
+                else if (isBmsCanId(canID))
+                {
+                    osMessageQueuePut(bmsRxCanMsgQueueHandle, &rxPacket, 0, 0);
                 }
             }
         }
