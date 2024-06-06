@@ -11,7 +11,7 @@
 
 #define VCU_COMMS_TASK_DELAY_MS 20
 
-void notify_heartbeat_task(HeartbeatNotify_t notify_val);
+void notify_heartbeat_task(uint32_t notify_val);
 
 _Bool isVcuCanId(uint16_t canId){
     return (canId == CAN_VCU_TO_ACU_ID || canId == CAN_VCU_SET_ACB_STATE_ID
@@ -52,7 +52,7 @@ void send_VCU_mesg(enum STARTUP_STATUS_NOTIFY_MSG msg){
 	sendCan(&hcan1, &data, 1, CAN_ACU_TO_VCU_ID, CAN_RTR_DATA, CAN_NO_EXT);
 }
 
-void notify_heartbeat_task(HeartbeatNotify_t notify_val){
+void notify_heartbeat_task(uint32_t notify_val){
 	TaskHandle_t task = NULL;
 	task = heartbeat_get_task();
 	if(task != NULL){

@@ -22,7 +22,7 @@ void StartVcuHrtBeatTask(void *argument){
     }
 
 	BaseType_t retRTOS;
-    HeartbeatNotify_t vcuNotification = 0;
+    uint32_t vcuNotification = 0;
 	uint8_t misses = 0; //indicates how many cycles we have gone without detecting ACB
 
 	for(;;){
@@ -32,7 +32,7 @@ void StartVcuHrtBeatTask(void *argument){
 		send_VCU_mesg(CAN_HEARTBEAT_RESPONSE);
 
 		//Check if ACB has sent a message
-		retRTOS = xTaskNotifyWait(0x00, 0x00, (uint32_t*) &vcuNotification, pdMS_TO_TICKS(HEARTBEAT_TASK_DELAY_MS));
+		retRTOS = xTaskNotifyWait(0x00, 0x00, &vcuNotification, pdMS_TO_TICKS(HEARTBEAT_TASK_DELAY_MS));
 
 		//check if the ACB responded
 		if(retRTOS == pdTRUE && vcuNotification == HEARTBEAT_REQUEST_NOTIFY){
