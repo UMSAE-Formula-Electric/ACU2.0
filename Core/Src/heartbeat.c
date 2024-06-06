@@ -18,7 +18,7 @@ static HeartbeatState_t vcu_connection_state = HEARTBEAT_NONE;
 void StartVcuHrtBeatTask(void *argument){
     uint8_t isTaskActivated = (int)argument;
     if (isTaskActivated == 0) {
-        osThreadTerminate(osThreadGetId());
+        osThreadExit();
     }
 
 	BaseType_t retRTOS;

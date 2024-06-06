@@ -54,7 +54,7 @@ TaskHandle_t get_startup_task(){
 void StartAcuStateTask(void *argument){
     uint8_t isTaskActivated = (int)argument;
     if (isTaskActivated == 0) {
-        osThreadTerminate(osThreadGetId());
+        osThreadExit();
     }
 
 	//Keep user led on to simulate LV key is on
