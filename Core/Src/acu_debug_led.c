@@ -3,7 +3,7 @@
 #include "gpio.h"
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
-
+#include "acu_debug_led.h"
 
 volatile enum LED_STATE state;
 int blockerLoopCount = 0;
@@ -57,6 +57,7 @@ void StartDebugLEDTask(void* argument)	{
 				led_set_2_white();
 				osDelay(pdMS_TO_TICKS(FAIL_TIME));
 				blockerLoopCount--;
+				osThreadYield();
 			}
 			break;
 		case SAFETY_LOOP_OPEN_LED:
@@ -86,10 +87,33 @@ void StartDebugLEDTask(void* argument)	{
 				led_set_1_white();
 				led_set_2_red();
 				osDelay(pdMS_TO_TICKS(FAIL_TIME));
+				osThreadYield();
+			}
+			break;
+		case PRECHARGE_FAIL:
+			for(int i = 0; i < FAIL_COUNT; i++) {
+				led_clear_1();
+				led_set_2_white();
+				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+				led_set_1_white();
+				led_clear_2();
+				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+				osThreadYield();
+			}
+			break;
+		case AIR_FAIL:
+			for(int i = 0; i < FAIL_COUNT; i++) {
+				led_set_1_white();
+				led_set_2_white();
+				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+				led_set_1_blue();
+				led_set_2_blue();
+				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+				osThreadYield();
 			}
 			break;
 		}
-		osDelay(pdMS_TO_TICKS(50));
+		vTaskDelay(pdMS_TO_TICKS(50));
 	}
 }
 

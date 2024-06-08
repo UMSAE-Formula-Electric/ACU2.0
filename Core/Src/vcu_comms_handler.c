@@ -9,7 +9,7 @@
 #include "iwdg.h"
 #include "motor_controller_can_utils.h"
 
-#define VCU_COMMS_TASK_DELAY_MS 20
+#define VCU_COMMS_TASK_DELAY_MS 5
 
 void notify_heartbeat_task(uint32_t notify_val);
 
