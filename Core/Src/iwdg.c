@@ -91,7 +91,8 @@ TaskInfo* getTaskInfos(size_t* count) {
             {&canRxTaskHandle, CAN_RX_TASK_ENABLED},
             {&coolingTaskHandle, COOLING_TASK_ENABLED},
             {&watchDogTaskHandle, WATCH_DOG_TASK_ENABLED},
-        {&bmsCanCommTaskHandle, BMS_CAN_COMM_TASK_ENABLED}
+            {&bmsCanCommTaskHandle, BMS_CAN_COMM_TASK_ENABLED},
+            {&vcuCanCommsTaskHandle, VCU_CAN_COMMS_TASK_ENABLED}
     };
 
     *count = sizeof(taskInfos) / sizeof(TaskInfo);

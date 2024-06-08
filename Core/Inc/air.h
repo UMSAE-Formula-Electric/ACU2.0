@@ -23,7 +23,7 @@ typedef enum AIR_CLOSE_STATUS {
 void open_precharge();
 precharge_status_t startup_precharge();
 void unchecked_air_close();
-
+void resetAirCtrl();
 
 ////////////////
 //Error Handlers
