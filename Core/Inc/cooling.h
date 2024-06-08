@@ -9,6 +9,8 @@ void cooling_enable_pump();
 void cooling_disable_pump();
 void cooling_enable_acc_fans();
 void cooling_disable_acc_fans();
+void enableCooling();
+void disableCooling();
 
 void cooling_enable_rad_fans();
 void cooling_disable_rad_fans();

@@ -141,17 +141,19 @@ void go_idle(){
 	//disable mc
 
 	//open airs
-	if(get_car_state() != IDLE || 1) {
+	if(get_car_state() != IDLE) {
 		open_precharge();
 		air_state = open_airs();
 		if(air_state != 0){
 			 log_and_handle_error(ERROR_AIR_WELD, &air_weld_handler);
 		}
 
-		cooling_disable_pump();
-		cooling_disable_rad_fans();
+		//cooling_disable_pump();
+		//cooling_disable_rad_fans();
 	}
-    open_airs();
+	resetAirCtrl();
+	disableCooling();
+    open_precharge();
 	set_car_state(IDLE);
 }
 
@@ -211,7 +213,7 @@ void go_rtd(){
 	setLEDState(BUZZER);
 	sound_buzzer();
 	setLEDState(ENABLE_COOLING);
-	enableCoolingGently();
+	enableCooling();
 	set_car_state(READY_TO_DRIVE);
 	send_VCU_mesg(CAN_ACB_RTD_ACK);
 }
