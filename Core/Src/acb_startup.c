@@ -70,6 +70,8 @@ void StartAcuStateTask(void *argument){
         state = get_car_state();
         switch(state){
             case IDLE:
+                resetAirCtrl();
+                open_precharge();
             	setLEDState(IDLE_LED);
                 //wait for button press
                 retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
@@ -139,7 +141,7 @@ void go_idle(){
 	//disable mc
 
 	//open airs
-	if(get_car_state() != IDLE) {
+	if(get_car_state() != IDLE || 1) {
 		open_precharge();
 		air_state = open_airs();
 		if(air_state != 0){
@@ -149,7 +151,7 @@ void go_idle(){
 		cooling_disable_pump();
 		cooling_disable_rad_fans();
 	}
-
+    open_airs();
 	set_car_state(IDLE);
 }
 
