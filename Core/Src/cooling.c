@@ -106,6 +106,7 @@ int coolingEnabled = 0;
 int coolingEnabledPrev = 0;
 int coolingStarted = 0;
 int maxDutyCycle = 5;
+int tempsRequireCooling = 0;
 /**
   * @brief  Monitor temperatures and turn pump and rad fans on accordingly
   * @retval never return from a freeRTOS task, kills task if infinite task ends
@@ -121,7 +122,7 @@ void StartCoolingTask(void *argument){
 
 	for(;;){
         kickWatchdogBit(osThreadGetId());
-		if(coolingEnabled) {
+		if(coolingEnabled || checkTempsForCooling()) {
 			if(!coolingStarted) {
 				for(int dutyCycle = 0; dutyCycle < 10; dutyCycle++) {
 					for(int i = 0; i < 25; i++) {
@@ -144,8 +145,17 @@ void StartCoolingTask(void *argument){
 			vTaskDelay(2000);
 			coolingStarted = 0;
 		}
+
 		//vTaskDelay(pdMS_TO_TICKS(5000));
 	}
+}
+
+int checkTempsForCooling() {
+	int coolingRequired = 0;
+	coolingRequired |= (mc_getAverageIGBTTemp() > IGBT_COOLING_TEMP);
+	coolingRequired |= (mc_get_mc_control_board_temp() > CONTROL_BOARD_COOLING_TEMP);
+	coolingRequired |= (mc_getMotorTemp() > MOTOR_COOLING_TEMP);
+	return coolingRequired;
 }
 
 void enableCoolingGently() {

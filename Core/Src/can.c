@@ -211,7 +211,60 @@ void StartCanRxTask(void *argument)
                 else if (isBmsCanId(canID))
                 {
                     osMessageQueuePut(bmsRxCanMsgQueueHandle, &rxPacket, 0, 0);
-                }
+                } else {
+					switch (canID) {
+						case CAN_MC_RX_HIGHSPEED: //High speed message, 333Hz
+							mc_process_fast_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_TEMP1_ID: //IGBT temp readings
+							mc_process_temp1_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_TEMP2_ID:
+							mc_process_temp2_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_DIGITAL_INPUT_STATUS:
+							mc_process_digital_input_status_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_MOTOR_ID:
+							mc_process_motor_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_CURRENT_ID:
+							mc_process_current_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_VOLT_ID:
+							mc_process_volt_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_FAULT_ID:
+							mc_process_fault_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_INTERNAL_VOLTAGES:
+							mc_process_internal_volt_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_INTERNAL_STATES:
+							mc_process_internal_states_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_TORQUE_TIMER_INFO:
+							mc_process_torque_timer_info_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_MODULATION_INDEX:
+							mc_process_modulation_index_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_FIRMWARE_INFO:
+							mc_process_firmware_info_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_DIAGNOSTIC_DATA:
+							mc_process_diagnostic_data_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_TORQUE_CAPABILITY:
+							mc_process_torque_capability_can(rxPacket.rxPacketData);
+							break;
+						case CAN_MC_RX_TEMP3_ID: //Motor temp reading
+							mc_process_temp3_can(rxPacket.rxPacketData);
+							break;
+						default:
+							break;
+            }
+        }
             }
         }
         osThreadYield();
