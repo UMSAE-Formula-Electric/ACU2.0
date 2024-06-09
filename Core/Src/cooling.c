@@ -122,7 +122,7 @@ void StartCoolingTask(void *argument){
 
 	for(;;){
         kickWatchdogBit(osThreadGetId());
-		if(coolingEnabled || checkTempsForCooling()) {
+		if((get_car_state() == READY_TO_DRIVE) && (coolingEnabled || checkTempsForCooling())) {
 			if(!coolingStarted) {
 				for(int dutyCycle = 0; dutyCycle < 10; dutyCycle++) {
 					for(int i = 0; i < 30; i++) {
