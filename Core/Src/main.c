@@ -94,7 +94,7 @@ int main(void)
   MX_USART2_Init();
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(MC_PWR_CTRL_GPIO_Port, MC_PWR_CTRL_Pin, GPIO_PIN_SET);
-
+  HAL_Delay(500);
   /* USER CODE END 2 */
 
   /* Init scheduler */

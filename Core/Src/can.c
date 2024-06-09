@@ -222,9 +222,6 @@ void StartCanRxTask(void *argument)
 						case CAN_MC_RX_TEMP2_ID:
 							mc_process_temp2_can(rxPacket.rxPacketData);
 							break;
-						case CAN_MC_RX_DIGITAL_INPUT_STATUS:
-							mc_process_digital_input_status_can(rxPacket.rxPacketData);
-							break;
 						case CAN_MC_RX_MOTOR_ID:
 							mc_process_motor_can(rxPacket.rxPacketData);
 							break;
@@ -240,20 +237,8 @@ void StartCanRxTask(void *argument)
 						case CAN_MC_RX_INTERNAL_VOLTAGES:
 							mc_process_internal_volt_can(rxPacket.rxPacketData);
 							break;
-						case CAN_MC_RX_INTERNAL_STATES:
-							mc_process_internal_states_can(rxPacket.rxPacketData);
-							break;
 						case CAN_MC_RX_TORQUE_TIMER_INFO:
 							mc_process_torque_timer_info_can(rxPacket.rxPacketData);
-							break;
-						case CAN_MC_RX_MODULATION_INDEX:
-							mc_process_modulation_index_can(rxPacket.rxPacketData);
-							break;
-						case CAN_MC_RX_FIRMWARE_INFO:
-							mc_process_firmware_info_can(rxPacket.rxPacketData);
-							break;
-						case CAN_MC_RX_DIAGNOSTIC_DATA:
-							mc_process_diagnostic_data_can(rxPacket.rxPacketData);
 							break;
 						case CAN_MC_RX_TORQUE_CAPABILITY:
 							mc_process_torque_capability_can(rxPacket.rxPacketData);

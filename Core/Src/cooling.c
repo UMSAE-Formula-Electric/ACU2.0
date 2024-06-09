@@ -125,23 +125,26 @@ void StartCoolingTask(void *argument){
 		if(coolingEnabled || checkTempsForCooling()) {
 			if(!coolingStarted) {
 				for(int dutyCycle = 0; dutyCycle < 10; dutyCycle++) {
-					for(int i = 0; i < 25; i++) {
+					for(int i = 0; i < 30; i++) {
 						HAL_GPIO_WritePin(FANS_CTRL_GPIO_Port, FANS_CTRL_Pin, GPIO_PIN_SET);
 						vTaskDelay(pdMS_TO_TICKS(dutyCycle));
 						HAL_GPIO_WritePin(FANS_CTRL_GPIO_Port, FANS_CTRL_Pin, GPIO_PIN_RESET);
 						vTaskDelay(pdMS_TO_TICKS(10 - dutyCycle));
 					}
 				}
+				HAL_GPIO_WritePin(PUMP_CTRL_GPIO_Port, PUMP_CTRL_Pin, GPIO_PIN_SET);
 				coolingStarted = 1;
 			} else {
 				HAL_GPIO_WritePin(FANS_CTRL_GPIO_Port, FANS_CTRL_Pin, GPIO_PIN_SET);
 				vTaskDelay(pdMS_TO_TICKS(15));
 				HAL_GPIO_WritePin(FANS_CTRL_GPIO_Port, FANS_CTRL_Pin, GPIO_PIN_RESET);
 				vTaskDelay(pdMS_TO_TICKS(15));
+
 			}
 
 		} else {
 			HAL_GPIO_WritePin(FANS_CTRL_GPIO_Port, FANS_CTRL_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(PUMP_CTRL_GPIO_Port, PUMP_CTRL_Pin, GPIO_PIN_RESET);
 			vTaskDelay(2000);
 			coolingStarted = 0;
 		}
