@@ -94,10 +94,10 @@ void StartDebugLEDTask(void* argument)	{
 			for(int i = 0; i < FAIL_COUNT; i++) {
 				led_clear_1();
 				led_set_2_white();
-				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+                osDelay(pdMS_TO_TICKS(FAIL_TIME));
 				led_set_1_white();
 				led_clear_2();
-				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+                osDelay(pdMS_TO_TICKS(FAIL_TIME));
 				osThreadYield();
 			}
 			break;
@@ -105,15 +105,15 @@ void StartDebugLEDTask(void* argument)	{
 			for(int i = 0; i < FAIL_COUNT; i++) {
 				led_set_1_white();
 				led_set_2_white();
-				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+                osDelay(pdMS_TO_TICKS(FAIL_TIME));
 				led_set_1_blue();
 				led_set_2_blue();
-				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+                osDelay(pdMS_TO_TICKS(FAIL_TIME));
 				osThreadYield();
 			}
 			break;
 		}
-		vTaskDelay(pdMS_TO_TICKS(50));
+        osDelay(pdMS_TO_TICKS(50));
 	}
 }
 
