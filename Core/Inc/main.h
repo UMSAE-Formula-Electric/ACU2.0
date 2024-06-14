@@ -59,15 +59,15 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define CAN_TX_TASK_ENABLED 1
 #define IWDG_RELOAD_PERIOD 4094
-#define COOLING_TASK_ENABLED 1
+#define COOLING_TASK_ENABLED 0
 #define VCU_HRTBEAT_TASK_ENABLED 1
 #define IWDG_EVENT_ALL_ALLOWED_BITS 0xFFFFFF
 #define ACU_STATE_TASK_ENABLED 1
 #define CAN_RX_TASK_ENABLED 1
 #define DEFAULT_TASK_ENABLED 0
 #define LED_TASK_ENABLED 1
-#define WATCH_DOG_TASK_ENABLED 0
-#define BMS_CAN_COMM_TASK_ENABLED 1
+#define WATCH_DOG_TASK_ENABLED 1
+#define BMS_CAN_COMM_TASK_ENABLED 0
 #define VCU_CAN_COMMS_TASK_ENABLED 1
 #define COOL_SYS_TEMP3_Pin GPIO_PIN_0
 #define COOL_SYS_TEMP3_GPIO_Port GPIOC
