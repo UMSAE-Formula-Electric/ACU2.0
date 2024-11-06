@@ -79,10 +79,6 @@ void StartAcuStateTask(void *argument){
                 		go_tsa();
                 	}
                 }
-//                else if(retRTOS == pdTRUE && (ulNotifiedValue == RTD_BUTTON_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
-//                    go_idle();
-//                }
-
                 break;
             case TRACTIVE_SYSTEM_ACTIVE:
                 setLEDState(TSA);
@@ -92,7 +88,7 @@ void StartAcuStateTask(void *argument){
                     if(ulNotifiedValue == RTD_BUTTON_PRESS){
                          go_rtd();
                     }
-                    else if(ulNotifiedValue == KILL_SWITCH_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
+                    else if(ulNotifiedValue == KILL_SWITCH_PRESS) {
                     	setLEDState(VCU_IDLE_REQUEST);
                         go_idle();
                     }
