@@ -111,6 +111,7 @@ void StartAcuStateTask(void *argument){
                 }
                 break;
             default:
+                //do nothing
                 break;
         }
         if(get_heartbeat_state() != HEARTBEAT_PRESENT && !DISABLE_HEARTBEAT_CHECK) {
