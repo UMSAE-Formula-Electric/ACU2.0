@@ -65,6 +65,7 @@ void StartAcuStateTask(void *argument){
 
 
 	for(;;){
+        //TODO 0: Check if the watchdog is being kicked
         kickWatchdogBit(osThreadGetId());
 
         state = get_car_state();

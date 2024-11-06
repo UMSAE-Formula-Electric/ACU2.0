@@ -119,6 +119,7 @@ void StartCoolingTask(void *argument){
 	float mc_air_temp = 0.0; // degrees c
 
 	for(;;){
+        //TODO 0: Check if the task is getting kicked
         kickWatchdogBit(osThreadGetId());
       if(get_car_state() == READY_TO_DRIVE){//check for rtd
 

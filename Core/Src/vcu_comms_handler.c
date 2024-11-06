@@ -71,6 +71,7 @@ void StartVcuCanCommsTask(void *argument){
     uint32_t canID;
 
     for(;;){
+        //TODO 0: Check if the task is getting kicked
         kickWatchdogBit(osThreadGetId());
 
         isMsgTakenFromQueue = osMessageQueueGet(vcuCanCommsQueueHandle, &rxPacket, 0, 0);
