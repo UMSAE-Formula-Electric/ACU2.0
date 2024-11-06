@@ -194,6 +194,7 @@ void StartCanRxTask(void *argument)
 
     for (;;)
     {
+        //TODO 0: Check if the task is getting kicked
         kickWatchdogBit(osThreadGetId());
 
         isMsgTakenFromQueue = osMessageQueueGet(canRxPacketQueueHandle, &rxPacket, 0, 0);
@@ -228,6 +229,7 @@ void StartCanTxTask(void *argument){
     osStatus_t isMsgTakenFromQueue;
 
     for(;;){
+        //TODO 0: Analyze the code below to see if it might cause the watch dog to trip
         kickWatchdogBit(osThreadGetId());
 
         isMsgTakenFromQueue = osMessageQueueGet(canTxPacketQueueHandle, &txPacket, 0, 0);

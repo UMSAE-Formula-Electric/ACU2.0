@@ -194,6 +194,7 @@ void StartWatchDogTask(void *argument) {
     bool allActiveTasksReady;
 
     for(;;) {
+        //TODO 0: Analyze the code below to see if it might cause the watch dog to trip
         kickWatchdogBit(osThreadGetId());
         allActiveTasksReady = areAllActiveTasksReady();                               // Check if all active tasks have set their bits in iwdgEventGroup
         if (allActiveTasksReady) {                                                    // If all tasks have set their bits before IWDG_RELOAD_PERIOD, refresh the watchdog timer

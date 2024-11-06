@@ -26,6 +26,7 @@ void StartVcuHrtBeatTask(void *argument){
 	uint8_t misses = 0; //indicates how many cycles we have gone without detecting ACB
 
 	for(;;){
+        //TODO 0: Check if the task is getting kicked
         kickWatchdogBit(osThreadGetId());
 
 		//send heartbeat message to ACB
