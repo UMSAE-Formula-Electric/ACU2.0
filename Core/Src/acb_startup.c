@@ -81,6 +81,9 @@ void StartAcuStateTask(void *argument){
                 		go_tsa();
                 	}
                 }
+                if(retRTOS == osErrorResource){
+                	logMessage("Error getting message from queue", false);
+                }
                 break;
             case TRACTIVE_SYSTEM_ACTIVE:
                 setLEDState(TSA);
@@ -95,6 +98,10 @@ void StartAcuStateTask(void *argument){
                         go_idle();
                     }
                 }
+
+                if(retRTOS == osErrorResource){
+                	logMessage("Error getting message from queue", false);
+                }
                 break;
             case READY_TO_DRIVE:
             	setLEDState(RTD);
@@ -108,6 +115,10 @@ void StartAcuStateTask(void *argument){
                     else{
                       logMessage("Bad runtime change request", false);
                     }
+                }
+
+                if(retRTOS == osErrorResource){
+                	logMessage("Error getting message from queue", false);
                 }
                 break;
             default:
