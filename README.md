@@ -36,4 +36,6 @@ The code is built using STM32CubeIDE.
 ----------------------
 
 
->[!note] Repo is public!
+> [!note] 
+> Repo is public!
+
