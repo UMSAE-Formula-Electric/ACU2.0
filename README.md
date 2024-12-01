@@ -33,3 +33,7 @@ The code is built using STM32CubeIDE.
 ### Prerequisites
 - [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html) 
 - [STM32CubeMX](https://www.st.com/en/development-tools/stm32cubemx.html)(optional) 
+----------------------
+
+
+>[!note] Repo is public!
