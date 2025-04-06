@@ -70,6 +70,8 @@ void StartAcuStateTask(void *argument){
         state = get_car_state();
         switch(state){
             case IDLE:
+                resetAirCtrl();
+                open_precharge();
             	setLEDState(IDLE_LED);
                 //wait for button press
                 retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
@@ -146,10 +148,12 @@ void go_idle(){
 			 log_and_handle_error(ERROR_AIR_WELD, &air_weld_handler);
 		}
 
-		cooling_disable_pump();
-		cooling_disable_rad_fans();
+		//cooling_disable_pump();
+		//cooling_disable_rad_fans();
 	}
-
+	resetAirCtrl();
+	disableCooling();
+    open_precharge();
 	set_car_state(IDLE);
 }
 
@@ -209,7 +213,7 @@ void go_rtd(){
 	setLEDState(BUZZER);
 	sound_buzzer();
 	setLEDState(ENABLE_COOLING);
-	enableCoolingGently();
+	enableCooling();
 	set_car_state(READY_TO_DRIVE);
 	send_VCU_mesg(CAN_ACB_RTD_ACK);
 }
