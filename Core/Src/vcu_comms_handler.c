@@ -14,8 +14,7 @@
 void notify_heartbeat_task(uint32_t notify_val);
 
 _Bool isVcuCanId(uint16_t canId){
-    return (canId == CAN_VCU_TO_ACU_ID || canId == CAN_VCU_SET_ACB_STATE_ID
-        || canId == CAN_MC_RX_INTERNAL_VOLTAGES || canId == CAN_MC_RX_VOLT_ID);
+    return (canId == CAN_VCU_TO_ACU_ID || canId == CAN_VCU_SET_ACB_STATE_ID);
 }
 
 void processVcuToAcuCanIdRxData(const uint8_t *RxData) {
@@ -78,23 +77,14 @@ void StartVcuCanCommsTask(void *argument){
             if (rxPacket.rxPacketHeader.IDE == CAN_ID_STD)
             {
                 canID = rxPacket.rxPacketHeader.StdId;
-                if (canID == CAN_VCU_TO_ACU_ID)
-                {
-                    processVcuToAcuCanIdRxData(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_VCU_SET_ACB_STATE_ID)
-                {
-                    processVcuSetAcuStateCanIdRxData(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_MC_RX_INTERNAL_VOLTAGES)
-                {
-                    mc_process_internal_volt_can(rxPacket.rxPacketData);
-                }
-                else if (canID == CAN_MC_RX_VOLT_ID)
-                {
-                    mc_process_volt_can(rxPacket.rxPacketData);
-                }
-                }
+                if (canID == CAN_VCU_TO_ACU_ID) { processVcuToAcuCanIdRxData(rxPacket.rxPacketData); }
+                else if (canID == CAN_VCU_SET_ACB_STATE_ID) { processVcuSetAcuStateCanIdRxData(rxPacket.rxPacketData); }
+                else if (canID == CAN_MC_RX_INTERNAL_VOLTAGES) { mc_process_internal_volt_can(rxPacket.rxPacketData); }
+                else if (canID == CAN_MC_RX_VOLT_ID) { mc_process_volt_can(rxPacket.rxPacketData); }
+                else if (canID == CAN_MC_RX_TEMP1_ID) { mc_process_temp1_can(rxPacket.rxPacketData); }
+                else if (canID == CAN_MC_RX_TEMP2_ID) { mc_process_temp2_can(rxPacket.rxPacketData); }
+                else if (canID == CAN_MC_RX_TEMP3_ID) { mc_process_temp3_can(rxPacket.rxPacketData); }
+            }
         }
 
         osDelay(pdMS_TO_TICKS(VCU_COMMS_TASK_DELAY_MS));
