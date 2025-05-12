@@ -80,9 +80,6 @@ void StartAcuStateTask(void *argument){
                 		go_tsa();
                 	}
                 }
-//                else if(retRTOS == pdTRUE && (ulNotifiedValue == RTD_BUTTON_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
-//                    go_idle();
-//                }
 
                 break;
             case TRACTIVE_SYSTEM_ACTIVE:
@@ -93,7 +90,9 @@ void StartAcuStateTask(void *argument){
                     if(ulNotifiedValue == RTD_BUTTON_PRESS){
                          go_rtd();
                     }
-                    else if(ulNotifiedValue == KILL_SWITCH_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
+                    else if(ulNotifiedValue == KILL_SWITCH_PRESS) {
+                    	// TODO: need to confirm if we're reaching KILL_SWITCH_PRESS calls
+                    	// Would be good to distinguish VCU_IDLE_REQUEST LEDs instead of just FAIL_STATE LEDs
                     	setLEDState(VCU_IDLE_REQUEST);
                         go_idle();
                     }
@@ -172,6 +171,9 @@ void go_tsa(){
 					setLEDState(FAIL);
 					go_idle();
 				}
+			} else {
+				open_airs();
+				go_idle();
 			}
 		}
 		else{
@@ -179,12 +181,9 @@ void go_tsa(){
 			go_idle();
 			setLEDState(FAIL);
 		}
-		open_precharge();
+	open_precharge();
 
-//		if(get_car_state() != TRACTIVE_SYSTEM_ACTIVE) {
-//			go_idle();
-//		}
-	}
+}
 
 
 loop_status_t checkSafetyLoop() {
