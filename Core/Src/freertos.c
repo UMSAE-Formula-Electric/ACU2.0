@@ -88,7 +88,7 @@ osThreadId_t coolingTaskHandle;
 const osThreadAttr_t coolingTask_attributes = {
   .name = "coolingTask",
   .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for watchDogTask */
 osThreadId_t watchDogTaskHandle;

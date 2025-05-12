@@ -10,6 +10,7 @@
 #include "can.h"
 #include "cmsis_os2.h"
 #include "FreeRTOS.h"
+#include "iwdg.h"
 
 void StartBmsCanCommTask(void *argument)
 {
@@ -24,8 +25,9 @@ void StartBmsCanCommTask(void *argument)
 
     for(;;)
     {
-    	bms_request_overall_parameters();
-        isMsgTakenFromQueue = osMessageQueueGet(bmsRxCanMsgQueueHandle, &rxPacket, 0, pdMS_TO_TICKS(5000));
+        kickWatchdogBit(osThreadGetId());
+
+        isMsgTakenFromQueue = osMessageQueueGet(bmsRxCanMsgQueueHandle, &rxPacket, 0, pdMS_TO_TICKS(500));
         if (isMsgTakenFromQueue == osOK)
         {
             canID = rxPacket.rxPacketHeader.StdId;
@@ -86,6 +88,6 @@ void StartBmsCanCommTask(void *argument)
   //      bms_request_overall_battery_voltages();
 //        bms_request_overall_cell_temp();
 
-        osDelay(pdMS_TO_TICKS(2500));
+        osDelay(pdMS_TO_TICKS(200));
     }
 }

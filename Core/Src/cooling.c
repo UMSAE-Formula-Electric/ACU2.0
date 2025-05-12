@@ -104,7 +104,9 @@ float cooling_mc_air_temp_to_c(uint32_t temperature){
 
 int coolingEnabled = 0;
 int coolingEnabledPrev = 0;
-
+int coolingStarted = 0;
+int maxDutyCycle = 5;
+int tempsRequireCooling = 0;
 /**
   * @brief  Monitor temperatures and turn pump and rad fans on accordingly
   * @retval never return from a freeRTOS task, kills task if infinite task ends
@@ -120,60 +122,56 @@ void StartCoolingTask(void *argument){
 
 	for(;;){
         kickWatchdogBit(osThreadGetId());
-      if(get_car_state() == READY_TO_DRIVE){//check for rtd
+		if((get_car_state() == READY_TO_DRIVE) && (coolingEnabled || checkTempsForCooling())) {
+			if(!coolingStarted) {
+				for(int dutyCycle = 0; dutyCycle < 10; dutyCycle++) {
+					for(int i = 0; i < 30; i++) {
+						HAL_GPIO_WritePin(FANS_CTRL_GPIO_Port, FANS_CTRL_Pin, GPIO_PIN_SET);
+						vTaskDelay(pdMS_TO_TICKS(dutyCycle));
+						HAL_GPIO_WritePin(FANS_CTRL_GPIO_Port, FANS_CTRL_Pin, GPIO_PIN_RESET);
+						vTaskDelay(pdMS_TO_TICKS(10 - dutyCycle));
+					}
+				}
+				HAL_GPIO_WritePin(PUMP_CTRL_GPIO_Port, PUMP_CTRL_Pin, GPIO_PIN_SET);
+				coolingStarted = 1;
+			} else {
+				HAL_GPIO_WritePin(FANS_CTRL_GPIO_Port, FANS_CTRL_Pin, GPIO_PIN_SET);
+				vTaskDelay(pdMS_TO_TICKS(15));
+				HAL_GPIO_WritePin(FANS_CTRL_GPIO_Port, FANS_CTRL_Pin, GPIO_PIN_RESET);
+				vTaskDelay(pdMS_TO_TICKS(15));
 
-    	if(mc_getAverageIGBTTemp() > COOLING_MC_PUMP_ON_TEMP) {
-    		//cooling_enable_pump();
-    	} else if(mc_getAverageIGBTTemp() < COOLING_MC_PUMP_OFF_TEMP){
-    		//cooling_disable_pump();
-    	}
+			}
 
-    	if(mc_getAverageIGBTTemp() > COOLING_MC_RAD_FAN_ON_TEMP) {
-    		//cooling_enable_rad_fans();
-    	} else if(mc_getAverageIGBTTemp() < COOLING_MC_RAD_FAN_OFF_TEMP) {
-    		//cooling_disable_rad_fans();
-    	}
+		} else {
+			HAL_GPIO_WritePin(FANS_CTRL_GPIO_Port, FANS_CTRL_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(PUMP_CTRL_GPIO_Port, PUMP_CTRL_Pin, GPIO_PIN_RESET);
+			vTaskDelay(2000);
+			coolingStarted = 0;
+		}
 
-    	if(coolingEnabled && !coolingEnabledPrev) {
-    		enableCoolingGently();
-    	}
+		//vTaskDelay(pdMS_TO_TICKS(5000));
+	}
+}
 
-        //read temps and convert to eng units
-        //mc_igbt_temp = cooling_igbt_temp_to_c( MC_getIGBTTemp() );
-        //mc_air_temp = cooling_mc_air_temp_to_c( MC_getAirTemp() );
-        /*
-        //check turning on pumps
-        if(mc_igbt_temp > COOLING_MC_PUMP_ON_TEMP || mc_air_temp >  COOLING_MC_PUMP_ON_TEMP){
-          cooling_enable_pump();
-        }
-        else if(mc_igbt_temp < (COOLING_MC_PUMP_ON_TEMP) && mc_air_temp < (COOLING_MC_PUMP_ON_TEMP ) ){
-          cooling_disable_pump();
-        }
-
-        //check turning on rad fans
-        if(mc_igbt_temp > COOLING_MC_RAD_FAN_ON_TEMP || mc_air_temp >  COOLING_MC_RAD_FAN_ON_TEMP){
-          cooling_enable_rad_fans();
-        }
-        else if(mc_igbt_temp < (COOLING_MC_RAD_FAN_ON_TEMP) && mc_air_temp < (COOLING_MC_RAD_FAN_ON_TEMP) ){
-          cooling_disable_rad_fans();
-        }
-        */
-      }
-      else{
-        //not rtd let it cool to ambient
-        cooling_disable_pump();
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        cooling_disable_rad_fans();
-      }
-      vTaskDelay(pdMS_TO_TICKS(1000));
-      osThreadYield();
-    }
-
+int checkTempsForCooling() {
+	int coolingRequired = 0;
+	coolingRequired |= (mc_getAverageIGBTTemp() > IGBT_COOLING_TEMP);
+	coolingRequired |= (mc_get_mc_control_board_temp() > CONTROL_BOARD_COOLING_TEMP);
+	coolingRequired |= (mc_getMotorTemp() > MOTOR_COOLING_TEMP);
+	return coolingRequired;
 }
 
 void enableCoolingGently() {
 	cooling_enable_pump();
 	vTaskDelay(pdMS_TO_TICKS(1000));
 	cooling_enable_rad_fans();
+}
+
+void enableCooling() {
+	coolingEnabled = 1;
+}
+
+void disableCooling() {
+	coolingEnabled = 0;
 }
 

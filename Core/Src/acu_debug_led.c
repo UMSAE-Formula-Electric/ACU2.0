@@ -94,10 +94,10 @@ void StartDebugLEDTask(void* argument)	{
 			for(int i = 0; i < FAIL_COUNT; i++) {
 				led_clear_1();
 				led_set_2_white();
-				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+                osDelay(pdMS_TO_TICKS(FAIL_TIME));
 				led_set_1_white();
 				led_clear_2();
-				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+                osDelay(pdMS_TO_TICKS(FAIL_TIME));
 				osThreadYield();
 			}
 			break;
@@ -105,15 +105,15 @@ void StartDebugLEDTask(void* argument)	{
 			for(int i = 0; i < FAIL_COUNT; i++) {
 				led_set_1_white();
 				led_set_2_white();
-				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+                osDelay(pdMS_TO_TICKS(FAIL_TIME));
 				led_set_1_blue();
 				led_set_2_blue();
-				vTaskDelay(pdMS_TO_TICKS(FAIL_TIME));
+                osDelay(pdMS_TO_TICKS(FAIL_TIME));
 				osThreadYield();
 			}
 			break;
 		}
-		vTaskDelay(pdMS_TO_TICKS(50));
+        osDelay(pdMS_TO_TICKS(50));
 	}
 }
 
@@ -142,8 +142,8 @@ void led_set_all_leds(){
 }
 
 void led_set_1_red() {
-    HAL_GPIO_WritePin(ACU_LED1_RED_GPIO_Port,ACU_LED1_RED_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(ACU_LED1_GREEN_GPIO_Port,ACU_LED1_GREEN_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(ACU_LED1_RED_GPIO_Port,ACU_LED1_RED_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(ACU_LED1_GREEN_GPIO_Port,ACU_LED1_GREEN_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(ACU_LED1_BLUE_GPIO_Port,ACU_LED1_BLUE_Pin, GPIO_PIN_RESET);
 }
 
@@ -155,8 +155,8 @@ void led_set_1_blue() {
 
 void led_set_1_green() {
     HAL_GPIO_WritePin(ACU_LED1_BLUE_GPIO_Port,ACU_LED1_BLUE_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(ACU_LED1_RED_GPIO_Port,ACU_LED1_RED_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(ACU_LED1_GREEN_GPIO_Port,ACU_LED1_GREEN_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(ACU_LED1_RED_GPIO_Port,ACU_LED1_RED_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(ACU_LED1_GREEN_GPIO_Port,ACU_LED1_GREEN_Pin, GPIO_PIN_SET);
 }
 
 void led_set_1_purple() {
@@ -184,14 +184,14 @@ void led_set_2_blue() {
 }
 
 void led_set_2_green() {
-    HAL_GPIO_WritePin(ACU_LED2_GREEN_GPIO_Port,ACU_LED2_GREEN_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(ACU_LED2_RED_GPIO_Port,ACU_LED2_RED_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(ACU_LED2_GREEN_GPIO_Port,ACU_LED2_GREEN_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(ACU_LED2_RED_GPIO_Port,ACU_LED2_RED_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(ACU_LED2_BLUE_GPIO_Port,ACU_LED2_BLUE_Pin, GPIO_PIN_RESET);
 }
 
 void led_set_2_red() {
-    HAL_GPIO_WritePin(ACU_LED2_RED_GPIO_Port,ACU_LED2_RED_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(ACU_LED2_GREEN_GPIO_Port,ACU_LED2_GREEN_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(ACU_LED2_RED_GPIO_Port,ACU_LED2_RED_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(ACU_LED2_GREEN_GPIO_Port,ACU_LED2_GREEN_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(ACU_LED2_BLUE_GPIO_Port,ACU_LED2_BLUE_Pin, GPIO_PIN_RESET);
 }
 
