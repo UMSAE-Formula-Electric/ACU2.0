@@ -116,7 +116,7 @@ void open_precharge(){
 void air_weld_handler(){
 	send_VCU_mesg(CAN_AIR_WELD_SET);
 	shutdown_MC();
-	go_idle();
+
 	//send message to other board using error function
 	//send_air_fail();
 	//set non-volitile storage
