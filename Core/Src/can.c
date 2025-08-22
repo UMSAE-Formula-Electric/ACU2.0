@@ -208,10 +208,10 @@ void StartCanRxTask(void *argument)
             {
                 canID = rxPacket.rxPacketHeader.StdId;
                 if (isVcuCanId(canID)) { osMessageQueuePut(vcuCanCommsQueueHandle, &rxPacket, 0, 0); }
-                else if (isBmsCanId(canID))
-                {
-                    osMessageQueuePut(bmsRxCanMsgQueueHandle, &rxPacket, 0, 0);
-                }
+                else if (canID == CAN_MC_RX_INTERNAL_VOLTAGES || canID == CAN_MC_RX_VOLT_ID
+                    || canID == CAN_MC_RX_TEMP1_ID || canID == CAN_MC_RX_TEMP2_ID || canID == CAN_MC_RX_TEMP3_ID)
+                    { osMessageQueuePut(vcuCanCommsQueueHandle, &rxPacket, 0, 0); } //TODO Temporary Solution
+                else if (isBmsCanId(canID)) { osMessageQueuePut(bmsRxCanMsgQueueHandle, &rxPacket, 0, 0); }
             }
         }
         osThreadYield();

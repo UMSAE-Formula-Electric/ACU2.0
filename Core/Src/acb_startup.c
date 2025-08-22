@@ -70,6 +70,8 @@ void StartAcuStateTask(void *argument){
         state = get_car_state();
         switch(state){
             case IDLE:
+                resetAirCtrl();
+                open_precharge();
             	setLEDState(IDLE_LED);
                 //wait for button press
                 retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
@@ -78,9 +80,6 @@ void StartAcuStateTask(void *argument){
                 		go_tsa();
                 	}
                 }
-//                else if(retRTOS == pdTRUE && (ulNotifiedValue == RTD_BUTTON_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
-//                    go_idle();
-//                }
 
                 break;
             case TRACTIVE_SYSTEM_ACTIVE:
@@ -91,7 +90,9 @@ void StartAcuStateTask(void *argument){
                     if(ulNotifiedValue == RTD_BUTTON_PRESS){
                          go_rtd();
                     }
-                    else if(ulNotifiedValue == KILL_SWITCH_PRESS) { // || ulNotifiedValue == KILL_SWITCH_PRESS ){
+                    else if(ulNotifiedValue == KILL_SWITCH_PRESS) {
+                    	// TODO: need to confirm if we're reaching KILL_SWITCH_PRESS calls
+                    	// Would be good to distinguish VCU_IDLE_REQUEST LEDs instead of just FAIL_STATE LEDs
                     	setLEDState(VCU_IDLE_REQUEST);
                         go_idle();
                     }
@@ -146,10 +147,12 @@ void go_idle(){
 			 log_and_handle_error(ERROR_AIR_WELD, &air_weld_handler);
 		}
 
-		cooling_disable_pump();
-		cooling_disable_rad_fans();
+		//cooling_disable_pump();
+		//cooling_disable_rad_fans();
 	}
-
+	resetAirCtrl();
+	disableCooling();
+    open_precharge();
 	set_car_state(IDLE);
 }
 
@@ -168,6 +171,9 @@ void go_tsa(){
 					setLEDState(FAIL);
 					go_idle();
 				}
+			} else {
+				open_airs();
+				go_idle();
 			}
 		}
 		else{
@@ -175,12 +181,9 @@ void go_tsa(){
 			go_idle();
 			setLEDState(FAIL);
 		}
-		open_precharge();
+	open_precharge();
 
-//		if(get_car_state() != TRACTIVE_SYSTEM_ACTIVE) {
-//			go_idle();
-//		}
-	}
+}
 
 
 loop_status_t checkSafetyLoop() {
@@ -209,7 +212,7 @@ void go_rtd(){
 	setLEDState(BUZZER);
 	sound_buzzer();
 	setLEDState(ENABLE_COOLING);
-	enableCoolingGently();
+	enableCooling();
 	set_car_state(READY_TO_DRIVE);
 	send_VCU_mesg(CAN_ACB_RTD_ACK);
 }
