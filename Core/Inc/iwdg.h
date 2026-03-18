@@ -47,6 +47,8 @@ typedef struct {
     uint8_t isTaskActive;
 } TaskInfo;
 
+
+
 typedef enum {
     DEFAULT_TASK,
     ACU_STATE_TASK,
@@ -59,6 +61,7 @@ typedef enum {
     WATCH_DOG_TASK,
     BMS_CAN_COMM_TASK,
     VCU_CAN_COMM_TASK,
+	BMS_HRTBEAT_TASK,
     NUM_TASKS
 } TaskBit_t;
 

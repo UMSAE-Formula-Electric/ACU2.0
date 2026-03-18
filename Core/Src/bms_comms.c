@@ -12,6 +12,16 @@
 #include "FreeRTOS.h"
 #include "iwdg.h"
 
+
+void notify_bms_heartbeat_task() {
+    TaskHandle_t task = NULL;
+    task = get_bms_heartbeat_task_handle();
+    if (task != NULL) {
+        xTaskNotify(task, 0, eNoAction);
+        osThreadFlagsSet(task, 0x01);
+    }
+}
+
 void StartBmsCanCommTask(void *argument)
 {
     uint8_t isTaskActivated = (int)argument;
@@ -57,7 +67,8 @@ void StartBmsCanCommTask(void *argument)
             }
             else if (canID == CAN_BMS_STATE_OF_CHARGE)
             {
-                process_bms_state_of_charge_can(rxPacket.rxPacketData);
+            	notify_bms_heartbeat_task();
+            	process_bms_state_of_charge_can(rxPacket.rxPacketData);
             }
             else if (canID == CAN_BMS_CONTACTOR_CONTROL)
             {

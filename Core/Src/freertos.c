@@ -88,7 +88,7 @@ osThreadId_t coolingTaskHandle;
 const osThreadAttr_t coolingTask_attributes = {
   .name = "coolingTask",
   .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for watchDogTask */
 osThreadId_t watchDogTaskHandle;
@@ -116,6 +116,13 @@ osThreadId_t vcuCanCommsTaskHandle;
 const osThreadAttr_t vcuCanCommsTask_attributes = {
   .name = "vcuCanCommsTask",
   .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for bmsHrtbeatTask */
+osThreadId_t bmsHrtbeatTaskHandle;
+const osThreadAttr_t bmsHrtbeatTask_attributes = {
+  .name = "bmsHrtbeatTask",
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for canRxPacketQueue */
@@ -164,6 +171,7 @@ extern void StartWatchDogTask(void *argument);
 extern void StartDebugLEDTask(void *argument);
 extern void StartBmsCanCommTask(void *argument);
 extern void StartVcuCanCommsTask(void *argument);
+extern void StartBmsHeartbeatTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -239,6 +247,9 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of vcuCanCommsTask */
   vcuCanCommsTaskHandle = osThreadNew(StartVcuCanCommsTask, (void*) VCU_CAN_COMMS_TASK_ENABLED, &vcuCanCommsTask_attributes);
+
+  /* creation of bmsHrtbeatTask */
+  bmsHrtbeatTaskHandle = osThreadNew(StartBmsHeartbeatTask, (void*) BMS_HRTBEAT_TASK_ENABLED, &bmsHrtbeatTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */

@@ -1,5 +1,6 @@
 #include "heartbeat.h"
 #include "vcu_comms_handler.h"
+#include "bms_comms.h"
 #include "logger.h"
 #include "freertos_task_handles.h"
 #include "iwdg.h"
@@ -8,6 +9,7 @@
 #define HEARTBEAT_MAX_MISSES		10 //Max number of times we can miss a heartbeat notification
 
 static HeartbeatState_t vcu_connection_state = HEARTBEAT_NONE;
+static HeartbeatState_t bms_connection_state = HEARTBEAT_NONE;
 
 /*
  * heartbeat_master_task
@@ -28,13 +30,13 @@ void StartVcuHrtBeatTask(void *argument){
 	for(;;){
         kickWatchdogBit(osThreadGetId());
 
-		//send heartbeat message to ACB
+		//send heartbeat message to ACU
 		send_VCU_mesg(CAN_HEARTBEAT_RESPONSE);
 
-		//Check if ACB has sent a message
+		//Check if ACU has sent a message
 		retRTOS = xTaskNotifyWait(0x00, 0x00, &vcuNotification, pdMS_TO_TICKS(HEARTBEAT_TASK_DELAY_MS));
 
-		//check if the ACB responded
+		//check if the ACU responded
 		if(retRTOS == pdTRUE && vcuNotification == HEARTBEAT_REQUEST_NOTIFY){
             // Received notification from ACU
             misses = 0; // Reset misses counter
@@ -72,4 +74,42 @@ TaskHandle_t heartbeat_get_task(){
 	return vcuHrtBeatTaskHandle;
 }
 
+void StartBmsHeartbeatTask(void *argument){
+    uint8_t isTaskActivated = (int)argument;
+    if (isTaskActivated == 0) {
+        osThreadExit();
+    }
 
+  BaseType_t retRTOS;
+  HeartbeatNotify_t bmsNotification = 0;
+  uint8_t misses = 0;
+
+  for(;;){
+    kickWatchdogBit(osThreadGetId());
+
+    retRTOS = xTaskNotifyWait(0x00, 0x00, (uint32_t*) &bmsNotification, pdMS_TO_TICKS(HEARTBEAT_TASK_DELAY_MS));
+    if(retRTOS == pdPASS){
+        misses = 0; // Reset misses counter
+        logMessage(bms_connection_state == HEARTBEAT_LOST ? "Heartbeat: BMS re-connection\r\n" : "Heartbeat: Heartbeat received from the BMS\r\n", true);
+        bms_connection_state = HEARTBEAT_PRESENT; // Set state
+    }
+    else{
+
+        if(++misses > HEARTBEAT_MAX_MISSES){
+
+            logMessage(bms_connection_state == HEARTBEAT_PRESENT ? "Heartbeat: Lost Connection with BMS\r\n" : "Heartbeat: Could not connect with BMS\r\n", true);
+            bms_connection_state = HEARTBEAT_LOST;
+
+        }
+    }
+    osDelay(pdMS_TO_TICKS(HEARTBEAT_TASK_DELAY_MS));
+  }
+}
+
+HeartbeatState_t get_bms_heartbeat_state(){
+	return bms_connection_state;
+}
+
+osThreadId_t get_bms_heartbeat_task_handle(){
+   return bmsHrtbeatTaskHandle;
+}
