@@ -74,7 +74,7 @@ void StartAcuStateTask(void *argument){
                 open_precharge();
             	setLEDState(IDLE_LED);
                 //wait for button press
-                retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
+                retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, pdMS_TO_TICKS(25));
                 if(retRTOS == osOK){
                 	if(ulNotifiedValue == TSA_BUTTON_PRESS){
                 		go_tsa();
@@ -85,7 +85,7 @@ void StartAcuStateTask(void *argument){
             case TRACTIVE_SYSTEM_ACTIVE:
                 setLEDState(TSA);
 
-                retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
+                retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, pdMS_TO_TICKS(25));
                 if(retRTOS == osOK){
                     if(ulNotifiedValue == RTD_BUTTON_PRESS){
                          go_rtd();
@@ -101,7 +101,8 @@ void StartAcuStateTask(void *argument){
             case READY_TO_DRIVE:
             	setLEDState(RTD);
 
-                retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, 0);
+				// Data will be sent inmediately when the button is pressed, we just check the queue
+                retRTOS = osMessageQueueGet(setCarStateQueueHandle, &ulNotifiedValue, 0, pdMS_TO_TICKS(25));
                 if (retRTOS == osOK){
                     if(ulNotifiedValue == KILL_SWITCH_PRESS){
                     	setLEDState(VCU_IDLE_REQUEST);
@@ -113,6 +114,8 @@ void StartAcuStateTask(void *argument){
                 }
                 break;
             default:
+				// Jusrt in case we get an unknow state, 
+				osDelay(pdMS_TO_TICKS(25));
                 break;
         }
         if(get_heartbeat_state() != HEARTBEAT_PRESENT && !DISABLE_HEARTBEAT_CHECK) {
@@ -124,7 +127,9 @@ void StartAcuStateTask(void *argument){
         	go_idle();
         	setLEDState(SAFETY_LOOP_OPEN_LED);
         }
-        vTaskDelay(pdMS_TO_TICKS(25));
+		// We dont need this line, we are already delaying on the message queue, 
+		// if there is no message, we will loop again and check the HB and safety loop again
+        //vTaskDelay(pdMS_TO_TICKS(25));
 	}
 	vTaskDelete( NULL );
 }
