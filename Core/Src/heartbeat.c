@@ -3,11 +3,17 @@
 #include "logger.h"
 #include "freertos_task_handles.h"
 #include "iwdg.h"
+#include "semphr.h"
 
 #define HEARTBEAT_TASK_DELAY_MS     100
 #define HEARTBEAT_MAX_MISSES		10 //Max number of times we can miss a heartbeat notification
 
 static HeartbeatState_t vcu_connection_state = HEARTBEAT_NONE;
+static SemaphoreHandle_t heartbeatMutex = NULL;
+
+void heartbeat_init(void){
+	heartbeatMutex = xSemaphoreCreateMutex();
+}
 
 /*
  * heartbeat_master_task
@@ -38,15 +44,19 @@ void StartVcuHrtBeatTask(void *argument){
 		if(retRTOS == pdTRUE && vcuNotification == HEARTBEAT_REQUEST_NOTIFY){
             // Received notification from ACU
             misses = 0; // Reset misses counter
+            xSemaphoreTake(heartbeatMutex, portMAX_DELAY);
             logMessage(vcu_connection_state == HEARTBEAT_LOST ? "Heartbeat: VCU re-connection\r\n" : "Heartbeat: Heartbeat received from the VCU\r\n", true);
             vcu_connection_state = HEARTBEAT_PRESENT; // Set state
+            xSemaphoreGive(heartbeatMutex);
 		}
 		else{
             // Did not receive notification from ACU
             if(++misses > HEARTBEAT_MAX_MISSES){
                 // Lost ACU
+                xSemaphoreTake(heartbeatMutex, portMAX_DELAY);
                 logMessage(vcu_connection_state == HEARTBEAT_PRESENT ? "Heartbeat: Lost Connection with VCU\r\n" : "Heartbeat: Could not connect with VCU\r\n", true);
                 vcu_connection_state = HEARTBEAT_LOST;
+                xSemaphoreGive(heartbeatMutex);
             }
 		}
 		vTaskDelay(pdMS_TO_TICKS(HEARTBEAT_TASK_DELAY_MS / 4));
@@ -60,7 +70,11 @@ void StartVcuHrtBeatTask(void *argument){
  * @Brief: This method is used to get the current state of heartbeat
  */
 HeartbeatState_t get_heartbeat_state(){
-	return vcu_connection_state;
+	HeartbeatState_t state;
+	xSemaphoreTake(heartbeatMutex, portMAX_DELAY);
+	state = vcu_connection_state;
+	xSemaphoreGive(heartbeatMutex);
+	return state;
 }
 
 /*

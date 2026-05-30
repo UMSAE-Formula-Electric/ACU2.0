@@ -5,6 +5,7 @@
 #include "task.h"
 #include "heartbeat_utils.h"
 
+void heartbeat_init(void);
 TaskHandle_t heartbeat_get_task();
 HeartbeatState_t get_heartbeat_state();
 
