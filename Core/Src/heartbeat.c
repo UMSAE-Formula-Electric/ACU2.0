@@ -42,22 +42,42 @@ void StartVcuHrtBeatTask(void *argument){
 
 		//check if the ACB responded
 		if(retRTOS == pdTRUE && vcuNotification == HEARTBEAT_REQUEST_NOTIFY){
-            // Received notification from ACU
-            misses = 0; // Reset misses counter
-            xSemaphoreTake(heartbeatMutex, portMAX_DELAY);
-            logMessage(vcu_connection_state == HEARTBEAT_LOST ? "Heartbeat: VCU re-connection\r\n" : "Heartbeat: Heartbeat received from the VCU\r\n", true);
-            vcu_connection_state = HEARTBEAT_PRESENT; // Set state
-            xSemaphoreGive(heartbeatMutex);
+		    misses = 0;
+
+		    /*1 read + 1 write*/
+		    HeartbeatState_t prev_state;
+		    xSemaphoreTake(heartbeatMutex, portMAX_DELAY);
+		    prev_state = vcu_connection_state;          // capture old
+		    vcu_connection_state = HEARTBEAT_PRESENT;   // write new
+		    xSemaphoreGive(heartbeatMutex);
+		    /*lock released*/
+
+		    logMessage(prev_state == HEARTBEAT_LOST
+		                 ? "Heartbeat: VCU re-connection\r\n"
+		                 : "Heartbeat: Heartbeat received from the VCU\r\n", true);
+
+		    //TODO in the can send
+		    /*
+		    HeartbeatState_t snapshot;
+			xSemaphoreTake(heartbeatMutex, portMAX_DELAY); //TAKE
+			snapshot = vcu_connection_state; //WRITE
+			xSemaphoreGive(heartbeatMutex); //GIVE
+
+			send_VCU_state_over_can(snapshot);   // long steps are outside the lock
+		     */
 		}
-		else{
-            // Did not receive notification from ACU
-            if(++misses > HEARTBEAT_MAX_MISSES){
-                // Lost ACU
-                xSemaphoreTake(heartbeatMutex, portMAX_DELAY);
-                logMessage(vcu_connection_state == HEARTBEAT_PRESENT ? "Heartbeat: Lost Connection with VCU\r\n" : "Heartbeat: Could not connect with VCU\r\n", true);
-                vcu_connection_state = HEARTBEAT_LOST;
-                xSemaphoreGive(heartbeatMutex);
-            }
+		else {
+		    if(++misses > HEARTBEAT_MAX_MISSES){
+		        HeartbeatState_t prev_state;
+		        xSemaphoreTake(heartbeatMutex, portMAX_DELAY);
+		        prev_state = vcu_connection_state;
+		        vcu_connection_state = HEARTBEAT_LOST;
+		        xSemaphoreGive(heartbeatMutex);
+
+		        logMessage(prev_state == HEARTBEAT_PRESENT
+		                     ? "Heartbeat: Lost Connection with VCU\r\n"
+		                     : "Heartbeat: Could not connect with VCU\r\n", true);
+		    }
 		}
 		vTaskDelay(pdMS_TO_TICKS(HEARTBEAT_TASK_DELAY_MS / 4));
 	}
