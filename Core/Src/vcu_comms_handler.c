@@ -38,7 +38,9 @@ void processVcuSetAcuStateCanIdRxData(const uint8_t *RxData) {
         	dashButtonPress = RTD_BUTTON_PRESS;
             break;
         case IDLE:
+#ifdef GoIdle
         	dashButtonPress = KILL_SWITCH_PRESS;
+#endif
             break;
         default:
             break;
