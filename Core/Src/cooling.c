@@ -54,8 +54,8 @@
 void cooling_init() {
 
 	//disable everything
-	cooling_disable_pump();
-	cooling_disable_rad_fans();
+	cooling_enable_pump();
+	cooling_enable_rad_fans();
 }
 
 void cooling_enable_pump() {
